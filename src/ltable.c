@@ -474,19 +474,19 @@ static void setnodevector (lua_State *L, Table *t, unsigned int size) {
   }
   else {
     int i;
-    int lsize = luaO_ceillog2(size);
+    int lsize = luaO_ceillog2(size);    //取以2为低的对数(向上取整的方式)
     if (lsize > MAXHBITS || (1u << lsize) > MAXHSIZE)
       luaG_runerror(L, "table overflow");
-    size = twoto(lsize);
-    t->node = luaM_newvector(L, size, Node);
-    for (i = 0; i < (int)size; i++) {
+    size = twoto(lsize);                //2^lsize
+    t->node = luaM_newvector(L, size, Node);//申请 (sizeof(Node) * size) 的内存
+    for (i = 0; i < (int)size; i++) {   //初始化node数组
       Node *n = gnode(t, i);
       gnext(n) = 0;
       setnilkey(n);
       setempty(gval(n));
     }
-    t->lsizenode = cast_byte(lsize);
-    t->lastfree = gnode(t, size);  /* all positions are free */
+    t->lsizenode = cast_byte(lsize);    //保存以2为低的对数值(用于表示node的大小)
+    t->lastfree = gnode(t, size);       //指向最后一个node节点
   }
 }
 
