@@ -204,8 +204,8 @@ static Node *mainpositionTV (const Table *t, const TValue *key) {
 ** positive does not break anything.  (In particular, 'next' will return
 ** some other valid item on the table or nil.)
 */
-static int equalkey (const TValue *k1, const Node *n2, int deadok) {
-  if ((rawtt(k1) != keytt(n2)) &&  /* not the same variants? */
+static int equalkey (const TValue *k1, const Node *n2, int deadok) {//比较k1和node的key是否相等
+  if ((rawtt(k1) != keytt(n2)) &&  //类型判断
        !(deadok && keyisdead(n2) && iscollectable(k1)))
    return 0;  /* cannot be same key */
   switch (keytt(n2)) {
@@ -243,7 +243,7 @@ LUAI_FUNC unsigned int luaH_realasize (const Table *t) {
     return t->alimit;  /* this is the size */
   else {
     unsigned int size = t->alimit;
-    /* compute the smallest power of 2 not smaller than 'n' */
+    //这个算法只需要观察二进制数的最高位是1的那一个位,通过偏移把比这个位低的位全部置为1。最后通过+1的方式得到一个向上取的2的指数
     size |= (size >> 1);
     size |= (size >> 2);
     size |= (size >> 4);
@@ -287,7 +287,7 @@ static unsigned int setlimittosize (Table *t) {
 */
 static const TValue *getgeneric (Table *t, const TValue *key, int deadok) {
   Node *n = mainpositionTV(t, key);
-  for (;;) {  /* check whether 'key' is somewhere in the chain */
+  for (;;) {  //查找key
     if (equalkey(key, n, deadok))
       return gval(n);  /* that's it */
     else {
@@ -305,7 +305,7 @@ static const TValue *getgeneric (Table *t, const TValue *key, int deadok) {
 ** the array part of a table, 0 otherwise.
 */
 static unsigned int arrayindex (lua_Integer k) {
-  if (l_castS2U(k) - 1u < MAXASIZE)  /* 'k' in [1, MAXASIZE]? */
+  if (l_castS2U(k) - 1u < MAXASIZE)  //k 必须是[1,MAXASIZE]
     return cast_uint(k);  /* 'key' is an appropriate array index */
   else
     return 0;
@@ -335,9 +335,9 @@ static unsigned int findindex (lua_State *L, Table *t, TValue *key,
 }
 
 
-int luaH_next (lua_State *L, Table *t, StkId key) {
+int luaH_next (lua_State *L, Table *t, StkId key) { //遍历
   unsigned int asize = luaH_realasize(t);
-  unsigned int i = findindex(L, t, s2v(key), asize);  /* find original key */
+  unsigned int i = findindex(L, t, s2v(key), asize);  //查找key
   for (; i < asize; i++) {  /* try first array part */
     if (!isempty(&t->array[i])) {  /* a non-empty entry? */
       setivalue(s2v(key), i + 1);
@@ -349,7 +349,7 @@ int luaH_next (lua_State *L, Table *t, StkId key) {
     if (!isempty(gval(gnode(t, i)))) {  /* a non-empty entry? */
       Node *n = gnode(t, i);
       getnodekey(L, s2v(key), n);
-      setobj2s(L, key + 1, gval(n));
+      setobj2s(L, key + 1, gval(n)); //value的值设置在key的下一个位置,意味着key必须是有两个元素的数组(一般使用lua栈)
       return 1;
     }
   }
@@ -357,7 +357,7 @@ int luaH_next (lua_State *L, Table *t, StkId key) {
 }
 
 
-static void freehash (lua_State *L, Table *t) {
+static void freehash (lua_State *L, Table *t) {//释放hash部分的内存
   if (!isdummy(t))
     luaM_freearray(L, t->node, cast_sizet(sizenode(t)));
 }
@@ -430,7 +430,7 @@ static unsigned int numusearray (const Table *t, unsigned int *nums) {
       if (i > lim)//遍历完成
         break;  /* no more elements to count */
     }
-    //统计 (2^(lg - 1), 2^lg] 的数量
+    //统计key在 (2^(lg - 1), 2^lg] 的数量
     for (; i <= lim; i++) {
       if (!isempty(&t->array[i-1]))
         lc++;
@@ -474,19 +474,19 @@ static void setnodevector (lua_State *L, Table *t, unsigned int size) {
   }
   else {
     int i;
-    int lsize = luaO_ceillog2(size);
+    int lsize = luaO_ceillog2(size);    //取以2为低的对数(向上取整的方式)
     if (lsize > MAXHBITS || (1u << lsize) > MAXHSIZE)
       luaG_runerror(L, "table overflow");
-    size = twoto(lsize);
-    t->node = luaM_newvector(L, size, Node);
-    for (i = 0; i < (int)size; i++) {
+    size = twoto(lsize);                //2^lsize
+    t->node = luaM_newvector(L, size, Node);//申请 (sizeof(Node) * size) 的内存
+    for (i = 0; i < (int)size; i++) {   //初始化node数组
       Node *n = gnode(t, i);
       gnext(n) = 0;
       setnilkey(n);
       setempty(gval(n));
     }
-    t->lsizenode = cast_byte(lsize);
-    t->lastfree = gnode(t, size);  /* all positions are free */
+    t->lsizenode = cast_byte(lsize);    //保存以2为低的对数值(用于表示node的大小)
+    t->lastfree = gnode(t, size);       //指向最后一个node节点
   }
 }
 
@@ -494,7 +494,7 @@ static void setnodevector (lua_State *L, Table *t, unsigned int size) {
 /*
 ** (Re)insert all elements from the hash part of 'ot' into table 't'.
 */
-static void reinsert (lua_State *L, Table *ot, Table *t) {
+static void reinsert (lua_State *L, Table *ot, Table *t) {//把ot表中的所有元素插入到t表
   int j;
   int size = sizenode(ot);
   for (j = 0; j < size; j++) {
@@ -514,12 +514,15 @@ static void reinsert (lua_State *L, Table *ot, Table *t) {
 ** Exchange the hash part of 't1' and 't2'.
 */
 static void exchangehashpart (Table *t1, Table *t2) { //交换hash部分
+  //保存
   lu_byte lsizenode = t1->lsizenode;
   Node *node = t1->node;
   Node *lastfree = t1->lastfree;
+  //交换t1
   t1->lsizenode = t2->lsizenode;
   t1->node = t2->node;
   t1->lastfree = t2->lastfree;
+  //交换t2
   t2->lsizenode = lsizenode;
   t2->node = node;
   t2->lastfree = lastfree;
@@ -573,12 +576,12 @@ void luaH_resize (lua_State *L, Table *t, unsigned int newasize,
      setempty(&t->array[i]);
   /* re-insert elements from old hash part into new parts */
   reinsert(L, &newt, t);  //newt现在是老的hash表。把原来表的数据插入新表
-  freehash(L, &newt);   //释放原来的hash部分
+  freehash(L, &newt);   //释放原来表的hash部分
 }
 
 
-void luaH_resizearray (lua_State *L, Table *t, unsigned int nasize) {
-  int nsize = allocsizenode(t);
+void luaH_resizearray (lua_State *L, Table *t, unsigned int nasize) {//设置数组部分的大小
+  int nsize = allocsizenode(t);     //hash部分的大小
   luaH_resize(L, t, nasize, nsize);
 }
 
@@ -587,13 +590,13 @@ void luaH_resizearray (lua_State *L, Table *t, unsigned int nasize) {
 */
 static void rehash (lua_State *L, Table *t, const TValue *ek) {
   unsigned int asize;  //数组部分的大小
-  unsigned int na;  //当前hash表中所有的int key
+  unsigned int na;  //当前表中所有的int key
   unsigned int nums[MAXABITS + 1];
   int i;
   int totaluse;//统计所有的已经使用的key
   for (i = 0; i <= MAXABITS; i++) nums[i] = 0;  /* reset counts */
   setlimittosize(t);
-  na = numusearray(t, nums);  //统计(2^(i - 1),2^i]的数量输出在nums[i],返回int key的数量
+  na = numusearray(t, nums);  //统计key在 (2^(i - 1),2^i]的数量输出在nums[i],返回int key的数量
   totaluse = na;  
   totaluse += numusehash(t, nums, &na);  //na+=hash部分的int key
   /* count extra key */
@@ -601,9 +604,9 @@ static void rehash (lua_State *L, Table *t, const TValue *ek) {
     na += countint(ivalue(ek), nums);
   totaluse++;
   /* compute new size for array part */
-  asize = computesizes(nums, &na);
+  asize = computesizes(nums, &na); //计算数组部分的大小.na返回的当数组部分大小为asize时,使用int key的数量
   /* resize the table to new computed sizes */
-  luaH_resize(L, t, asize, totaluse - na);//totaluse - na  all_key - all_int_key
+  luaH_resize(L, t, asize, totaluse - na);//totaluse - na  all_key - 新数组部分int key的数量
 }
 
 
@@ -617,22 +620,22 @@ Table *luaH_new (lua_State *L) {
   GCObject *o = luaC_newobj(L, LUA_VTABLE, sizeof(Table));
   Table *t = gco2t(o);
   t->metatable = NULL;
-  t->flags = cast_byte(maskflags);  /* table has no metamethod fields */
+  t->flags = cast_byte(maskflags);  //这个值表示没有元方法
   t->array = NULL;
   t->alimit = 0;
-  setnodevector(L, t, 0);
+  setnodevector(L, t, 0); //初始化hash部分
   return t;
 }
 
 
-void luaH_free (lua_State *L, Table *t) {
+void luaH_free (lua_State *L, Table *t) { //删除table
   freehash(L, t);
   luaM_freearray(L, t->array, luaH_realasize(t));
   luaM_free(L, t);
 }
 
 
-static Node *getfreepos (Table *t) {
+static Node *getfreepos (Table *t) { //从后往前找一个未使用的节点
   if (!isdummy(t)) {
     while (t->lastfree > t->node) {
       t->lastfree--;
@@ -681,7 +684,7 @@ void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
     }
     lua_assert(!isdummy(t));
     othern = mainposition(t, keytt(mp), &keyval(mp));//找到这个node的hash头
-    if (othern != mp) {  //如果这个node不是头
+    if (othern != mp) {  //如果这个node不是本身,说明这个节点已经变为别的节点的链表节点
       /* yes; move colliding node into free position */
       while (othern + gnext(othern) != mp)  //找到node在这个槽的位置
         othern += gnext(othern);
@@ -695,7 +698,7 @@ void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
     }
     else {  //如果这个node是头
       /* new node will go into free position */
-      if (gnext(mp) != 0)//这个node的后续链表 (必定有后续,最少有一个这个槽本身的节点)
+      if (gnext(mp) != 0)//如果node有后续链表
         gnext(f) = cast_int((mp + gnext(mp)) - f);  //新节点指向后续节点
       else lua_assert(gnext(f) == 0);
       gnext(mp) = cast_int(f - mp);//当前节点指向新节点(头插法完成)
@@ -800,7 +803,7 @@ const TValue *luaH_get (Table *t, const TValue *key) {
 */
 void luaH_finishset (lua_State *L, Table *t, const TValue *key,
                                    const TValue *slot, TValue *value) {
-  if (isabstkey(slot))
+  if (isabstkey(slot)) //如果是哨兵节点就创捷,有就重新赋值
     luaH_newkey(L, t, key, value);
   else
     setobj2t(L, cast(TValue *, slot), value);
@@ -812,7 +815,7 @@ void luaH_finishset (lua_State *L, Table *t, const TValue *key,
 ** barrier and invalidate the TM cache.
 */
 void luaH_set (lua_State *L, Table *t, const TValue *key, TValue *value) {
-  const TValue *slot = luaH_get(t, key);
+  const TValue *slot = luaH_get(t, key);  //获取key,如果没有返回哨兵节点
   luaH_finishset(L, t, key, slot, value);
 }
 
