@@ -370,16 +370,16 @@ typedef struct GCObject {
 /*
 ** Header for a string value.
 */
-typedef struct TString {
-  CommonHeader;
-  lu_byte extra;  /* reserved words for short strings; "has hash" for longs */
-  lu_byte shrlen;  /* length for short strings */
+typedef struct TString {//字符串
+  CommonHeader;//gc
+  lu_byte extra;  //长字符串是否hash过的标志
+  lu_byte shrlen;  //短字符串的长度
   unsigned int hash;
   union {
-    size_t lnglen;  /* length for long strings */
-    struct TString *hnext;  /* linked list for hash table */
+    size_t lnglen;  //长字符串的长度
+    struct TString *hnext;  //短字符串的next指针
   } u;
-  char contents[1];
+  char contents[1]; //内容
 } TString;
 
 
@@ -511,7 +511,7 @@ typedef struct Upvaldesc {
 ** Description of a local variable for function prototypes
 ** (used for debug information)
 */
-typedef struct LocVar {
+typedef struct LocVar {//局部变量
   TString *varname;
   int startpc;  /* first point where variable is active */
   int endpc;    /* first point where variable is dead */
@@ -536,7 +536,7 @@ typedef struct AbsLineInfo {
 /*
 ** Function Prototypes
 */
-typedef struct Proto {
+typedef struct Proto { //语法解析的输出
   CommonHeader;
   lu_byte numparams;  /* number of fixed (named) parameters */
   lu_byte is_vararg;
@@ -686,11 +686,11 @@ typedef union Closure {
 typedef union Node {
   struct NodeKey {
     TValuefields;  /* fields for value */
-    lu_byte key_tt;  /* key type */
-    int next;  /* for chaining */
-    Value key_val;  /* key value */
+    lu_byte key_tt;  //key 类型
+    int next;  //next 指针
+    Value key_val;  //key
   } u;
-  TValue i_val;  /* direct access to node's value as a proper 'TValue' */
+  TValue i_val;  //value 快捷访问的方式
 } Node;
 
 
@@ -723,12 +723,12 @@ typedef union Node {
 
 typedef struct Table {
   CommonHeader;
-  lu_byte flags;  /* 1<<p means tagmethod(p) is not present */
-  lu_byte lsizenode;  /* log2 of size of 'node' array */
-  unsigned int alimit;  /* "limit" of 'array' array */
-  TValue *array;  /* array part */
-  Node *node;
-  Node *lastfree;  /* any free position is before this position */
+  lu_byte flags;  //是否存在元方法
+  lu_byte lsizenode;  //hash部分的大小(这个值是以2为底的对数值)
+  unsigned int alimit;  //数组大小
+  TValue *array;  //数组部分
+  Node *node;     //hash部分
+  Node *lastfree;  //指向hash部分最后一个未使用的节点
   struct Table *metatable;
   GCObject *gclist;
 } Table;
@@ -773,7 +773,7 @@ typedef struct Table {
 #define lmod(s,size) \
 	(check_exp((size&(size-1))==0, (cast_int((s) & ((size)-1)))))
 
-
+//2的x次方
 #define twoto(x)	(1<<(x))
 #define sizenode(t)	(twoto((t)->lsizenode))
 

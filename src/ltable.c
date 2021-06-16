@@ -320,11 +320,11 @@ static unsigned int arrayindex (lua_Integer k) {
 static unsigned int findindex (lua_State *L, Table *t, TValue *key,
                                unsigned int asize) {
   unsigned int i;
-  if (ttisnil(key)) return 0;  /* first iteration */
+  if (ttisnil(key)) return 0;  //如果是空，返回0，这个是遍历的起点
   i = ttisinteger(key) ? arrayindex(ivalue(key)) : 0;
-  if (i - 1u < asize)  /* is 'key' inside array part? */
+  if (i - 1u < asize)  //key 在数组部分
     return i;  /* yes; that's the index */
-  else {
+  else {//key 在hash部分
     const TValue *n = getgeneric(t, key, 1);
     if (l_unlikely(isabstkey(n)))
       luaG_runerror(L, "invalid key to 'next'");  /* key not found */
@@ -341,7 +341,7 @@ int luaH_next (lua_State *L, Table *t, StkId key) { //遍历
   for (; i < asize; i++) {  /* try first array part */
     if (!isempty(&t->array[i])) {  /* a non-empty entry? */
       setivalue(s2v(key), i + 1);
-      setobj2s(L, key + 1, &t->array[i]);
+      setobj2s(L, key + 1, &t->array[i]);//value的值设置在key的下一个位置,意味着key必须是有两个元素的数组(一般使用lua栈)
       return 1;
     }
   }
@@ -605,7 +605,7 @@ static void rehash (lua_State *L, Table *t, const TValue *ek) {
   totaluse++;
   /* compute new size for array part */
   asize = computesizes(nums, &na); //计算数组部分的大小.na返回的当数组部分大小为asize时,使用int key的数量
-  /* resize the table to new computed sizes */
+  //重新设置数组部分和hash部分的大小
   luaH_resize(L, t, asize, totaluse - na);//totaluse - na  all_key - 新数组部分int key的数量
 }
 
@@ -685,7 +685,7 @@ void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
     lua_assert(!isdummy(t));
     othern = mainposition(t, keytt(mp), &keyval(mp));//找到这个node的hash头
     if (othern != mp) {  //如果这个node不是本身,说明这个节点已经变为别的节点的链表节点
-      /* yes; move colliding node into free position */
+      //用一个为使用的节点替换
       while (othern + gnext(othern) != mp)  //找到node在这个槽的位置
         othern += gnext(othern);
       gnext(othern) = cast_int(f - othern);  //node的前一个节点指向新的节点
@@ -697,7 +697,7 @@ void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
       setempty(gval(mp));
     }
     else {  //如果这个node是头
-      /* new node will go into free position */
+      //插入未使用的节点
       if (gnext(mp) != 0)//如果node有后续链表
         gnext(f) = cast_int((mp + gnext(mp)) - f);  //新节点指向后续节点
       else lua_assert(gnext(f) == 0);
