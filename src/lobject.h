@@ -372,7 +372,7 @@ typedef struct GCObject {
 */
 typedef struct TString {//字符串
   CommonHeader;//gc
-  lu_byte extra;  //长字符串是否hash过的标志
+  lu_byte extra;  //长字符串是否hash过的标志.短字符串存的是关键字的下标值
   lu_byte shrlen;  //短字符串的长度
   unsigned int hash;
   union {

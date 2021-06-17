@@ -25,13 +25,13 @@ int luaZ_fill (ZIO *z) {
   lua_State *L = z->L;
   const char *buff;
   lua_unlock(L);
-  buff = z->reader(L, z->data, &size);
+  buff = z->reader(L, z->data, &size);  //调用回调,获得数据
   lua_lock(L);
-  if (buff == NULL || size == 0)
+  if (buff == NULL || size == 0) //读到结尾
     return EOZ;
-  z->n = size - 1;  /* discount char being returned */
-  z->p = buff;
-  return cast_uchar(*(z->p++));
+  z->n = size - 1;  //长度
+  z->p = buff;      //缓冲区
+  return cast_uchar(*(z->p++)); //转成unsigned char
 }
 
 

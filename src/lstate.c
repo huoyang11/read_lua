@@ -233,9 +233,9 @@ static void f_luaopen (lua_State *L, void *ud) {
   UNUSED(ud);
   stack_init(L, L);  /* init stack */
   init_registry(L, g);
-  luaS_init(L);
-  luaT_init(L);
-  luaX_init(L);
+  luaS_init(L);   //初始化全局字符串表
+  luaT_init(L);   //添加元方法字符串
+  luaX_init(L);   //添加关键字字符串
   g->gcrunning = 1;  /* allow gc */
   setnilvalue(&g->nilvalue);  /* now state is complete */
   luai_userstateopen(L);
@@ -355,7 +355,7 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   int i;
   lua_State *L;
   global_State *g;
-  LG *l = cast(LG *, (*f)(ud, NULL, LUA_TTHREAD, sizeof(LG)));
+  LG *l = cast(LG *, (*f)(ud, NULL, LUA_TTHREAD, sizeof(LG))); //malloc
   if (l == NULL) return NULL;
   L = &l->l.l;
   g = &l->g;
@@ -366,12 +366,12 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g->allgc = obj2gco(L);  /* by now, only object is the main thread */
   L->next = NULL;
   incnny(L);  /* main thread is always non yieldable */
-  g->frealloc = f;
+  g->frealloc = f;    //内存分配函数
   g->ud = ud;
   g->warnf = NULL;
   g->ud_warn = NULL;
   g->mainthread = L;
-  g->seed = luai_makeseed(L);
+  g->seed = luai_makeseed(L); //字符串hash因子
   g->gcrunning = 0;  /* no GC while building state */
   g->strt.size = g->strt.nuse = 0;
   g->strt.hash = NULL;

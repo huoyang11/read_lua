@@ -1922,7 +1922,7 @@ static void mainfunc (LexState *ls, FuncState *fs) {
   env->name = ls->envn;
   luaC_objbarrier(ls->L, fs->f, env->name);
   luaX_next(ls);  /* read first token */
-  statlist(ls);  /* parse main body */
+  statlist(ls);  //解析入口
   check(ls, TK_EOS);
   close_func(ls);
 }
@@ -1938,7 +1938,7 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
   lexstate.h = luaH_new(L);  /* create table for scanner */
   sethvalue2s(L, L->top, lexstate.h);  /* anchor it */
   luaD_inctop(L);
-  funcstate.f = cl->p = luaF_newproto(L);
+  funcstate.f = cl->p = luaF_newproto(L); //语法解析的输出结果为cl->p
   luaC_objbarrier(L, cl, cl->p);
   funcstate.f->source = luaS_new(L, name);  /* create and anchor TString */
   luaC_objbarrier(L, funcstate.f, funcstate.f->source);

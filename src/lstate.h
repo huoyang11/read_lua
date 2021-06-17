@@ -147,10 +147,10 @@ struct lua_longjmp;  /* defined in ldo.c */
 #define KGC_GEN		1	/* generational gc */
 
 
-typedef struct stringtable {
-  TString **hash;
-  int nuse;  /* number of elements */
-  int size;
+typedef struct stringtable { //字符串hash表
+  TString **hash; //散列槽
+  int nuse;  //当前节点的数量
+  int size;  //槽的大小
 } stringtable;
 
 
@@ -247,16 +247,16 @@ typedef struct CallInfo {
 ** 'global state', shared by all threads of this state
 */
 typedef struct global_State {
-  lua_Alloc frealloc;  /* function to reallocate memory */
+  lua_Alloc frealloc;  //lua中内存分配的函数
   void *ud;         /* auxiliary data to 'frealloc' */
   l_mem totalbytes;  /* number of bytes currently allocated - GCdebt */
   l_mem GCdebt;  /* bytes allocated not yet compensated by the collector */
   lu_mem GCestimate;  /* an estimate of the non-garbage memory in use */
   lu_mem lastatomic;  /* see function 'genstep' in file 'lgc.c' */
-  stringtable strt;  /* hash table for strings */
+  stringtable strt;  //全局唯一的字符串hash表
   TValue l_registry;
   TValue nilvalue;  /* a nil value */
-  unsigned int seed;  /* randomized seed for hashes */
+  unsigned int seed;  //hash因子
   lu_byte currentwhite;
   lu_byte gcstate;  /* state of garbage collector */
   lu_byte gckind;  /* kind of GC running */
@@ -292,7 +292,7 @@ typedef struct global_State {
   TString *memerrmsg;  /* message for memory-allocation errors */
   TString *tmname[TM_N];  /* array with tag-method names */
   struct Table *mt[LUA_NUMTAGS];  /* metatables for basic types */
-  TString *strcache[STRCACHE_N][STRCACHE_M];  /* cache for strings in API */
+  TString *strcache[STRCACHE_N][STRCACHE_M];  //字符串缓存
   lua_WarnFunction warnf;  /* warning function */
   void *ud_warn;         /* auxiliary data to 'warnf' */
 } global_State;
@@ -301,16 +301,16 @@ typedef struct global_State {
 /*
 ** 'per thread' state
 */
-struct lua_State {
+struct lua_State { //lua虚拟机
   CommonHeader;
   lu_byte status;
   lu_byte allowhook;
   unsigned short nci;  /* number of items in 'ci' list */
-  StkId top;  /* first free slot in the stack */
-  global_State *l_G;
-  CallInfo *ci;  /* call info for current function */
-  StkId stack_last;  /* end of stack (last element + 1) */
-  StkId stack;  /* stack base */
+  StkId top;  //指向栈顶
+  global_State *l_G;  //全局状态机
+  CallInfo *ci;  //当前真在执行的函数信息
+  StkId stack_last;  //执行栈的末尾
+  StkId stack;  //栈底
   UpVal *openupval;  /* list of open upvalues in this stack */
   StkId tbclist;  /* list of to-be-closed variables */
   GCObject *gclist;
@@ -345,8 +345,8 @@ struct lua_State {
 ** part of any of them anywhere that a declaration of the complete type
 ** of the union is visible."
 */
-union GCUnion {
-  GCObject gc;  /* common header */
+union GCUnion { //需要gc操作的类型集合
+  GCObject gc;  //每个需要gc操作的类型,开头都为GCObject,声明这个变量可以方便访问这个元素
   struct TString ts;
   struct Udata u;
   union Closure cl;

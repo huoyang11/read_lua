@@ -707,15 +707,15 @@ LUALIB_API void luaL_unref (lua_State *L, int t, int ref) {
 
 typedef struct LoadF {
   int n;  /* number of pre-read characters */
-  FILE *f;  /* file being read */
-  char buff[BUFSIZ];  /* area for reading file */
+  FILE *f;  //文件指针
+  char buff[BUFSIZ];  //缓存
 } LoadF;
 
 
 static const char *getF (lua_State *L, void *ud, size_t *size) {
   LoadF *lf = (LoadF *)ud;
   (void)L;  /* not used */
-  if (lf->n > 0) {  /* are there pre-read characters to be read? */
+  if (lf->n > 0) {  //有预读取的字符串
     *size = lf->n;  /* return them (chars already in buffer) */
     lf->n = 0;  /* no more pre-read characters */
   }
@@ -1006,7 +1006,7 @@ LUALIB_API const char *luaL_gsub (lua_State *L, const char *s,
   return lua_tostring(L, -1);
 }
 
-
+//lua中所有内存分配最终的入口
 static void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
   (void)ud; (void)osize;  /* not used */
   if (nsize == 0) {
