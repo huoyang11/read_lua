@@ -924,7 +924,7 @@ static void exp2reg (FuncState *fs, expdesc *e, int reg) {
 void luaK_exp2nextreg (FuncState *fs, expdesc *e) {
   luaK_dischargevars(fs, e);
   freeexp(fs, e);
-  luaK_reserveregs(fs, 1);
+  luaK_reserveregs(fs, 1); //分配寄存器
   exp2reg(fs, e, fs->freereg - 1);
 }
 

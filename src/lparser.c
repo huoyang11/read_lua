@@ -1723,16 +1723,16 @@ static void localstat (LexState *ls) {
   int nexps;
   expdesc e;
   do {
-    vidx = new_localvar(ls, str_checkname(ls));
+    vidx = new_localvar(ls, str_checkname(ls)); //分配一个Vardesc,返回其数组下标
     kind = getlocalattribute(ls);
-    getlocalvardesc(fs, vidx)->vd.kind = kind;
+    getlocalvardesc(fs, vidx)->vd.kind = kind;  //根据new_localvar返回的下标找到对应的结构
     if (kind == RDKTOCLOSE) {  /* to-be-closed? */
       if (toclose != -1)  /* one already present? */
         luaK_semerror(ls, "multiple to-be-closed variables in local list");
       toclose = fs->nactvar + nvars;
     }
-    nvars++;
-  } while (testnext(ls, ','));
+    nvars++;  //局部变量数量
+  } while (testnext(ls, ','));//是否还有后续的局部变量  (如 a,b = 10,20)
   if (testnext(ls, '='))
     nexps = explist(ls, &e);
   else {
