@@ -1,0 +1,3 @@
+define plua_Tval
+p print_value($arg0,$arg1)
+end

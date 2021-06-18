@@ -17,23 +17,17 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-//TODO
 static int b_print (lua_State *L) {
-  int n = lua_gettop(L);  /* number of arguments */
 
   size_t l;
-  const char *s = luaL_tolstring(L, 1, &l);
-  lua_pop(L, 1);
+  luaL_tolstring(L, 1, &l);
 
-  lua_pushstring(L,s);
-
-  return 0;
+  return 1;
 }
 
-//TODO
 const char *print_value(lua_State *L,const TValue *o)
 {
-  setfvalue(L,s2v(L->top), b_print);
+  setfvalue(s2v(L->top), b_print);
   api_incr_top(L);
 
   setobj(L,s2v(L->top), o);
@@ -41,5 +35,29 @@ const char *print_value(lua_State *L,const TValue *o)
 
   lua_pcall(L,1,1,0);
 
-  return NULL;
+  const char *s = lua_tostring(L,-1);
+
+  lua_pop(L,1);
+
+  return s;
+}
+
+//TODO
+const char *printf_table(lua_State *L,const TValue *o)
+{
+  static char buf[2048] = {0};
+  memset(buf,0,sizeof(buf));
+
+  Table *t = hvalue(o);
+
+  setnilvalue(s2v(L->top));
+  while(luaH_next(L,t,L->top)) {
+      //printf("%s   %f\n",getstr(tsvalue(s2v(L->top))),nvalue(s2v(L->top+1)));
+      print_value(L,s2v(L->top));
+      printf("\t");
+      print_value(L,s2v(L->top+1));
+      printf("\n");
+  }
+
+  return buf;
 }
