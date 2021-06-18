@@ -384,7 +384,7 @@ int luaK_code (FuncState *fs, Instruction i) {
   luaM_growvector(fs->ls->L, f->code, fs->pc, f->sizecode, Instruction,
                   MAX_INT, "opcodes");
   f->code[fs->pc++] = i;
-  savelineinfo(fs, f, fs->ls->lastline);
+  savelineinfo(fs, f, fs->ls->lastline);  //指令所在的行号
   return fs->pc - 1;  /* index of new instruction */
 }
 
@@ -1428,7 +1428,7 @@ static void codearith (FuncState *fs, BinOpr opr,
   TMS event = cast(TMS, opr + TM_ADD);
   if (tonumeral(e2, NULL) && luaK_exp2K(fs, e2)) {  /* K operand? */
     int v2 = e2->u.info;  /* K index */
-    OpCode op = cast(OpCode, opr + OP_ADDK);
+    OpCode op = cast(OpCode, opr + OP_ADDK); //把BinOpr转成OpCode,OP_ADDK是枚举的差值
     finishbinexpval(fs, e1, e2, op, v2, flip, line, OP_MMBINK, event);
   }
   else {  /* 'e2' is neither an immediate nor a K operand */

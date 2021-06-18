@@ -38,7 +38,7 @@ LIB_O=	lauxlib.o lbaselib.o lcorolib.o ldblib.o liolib.o lmathlib.o loadlib.o lo
 BASE_O= $(CORE_O) $(LIB_O) $(MYOBJS)
 
 LUA_T=	lua
-LUA_O=	lua.o
+LUA_O=	lua.o gdb_print.o
 
 LUAC_T=	luac
 LUAC_O=	luac.o
@@ -218,5 +218,6 @@ lvm.o: lvm.c lprefix.h lua.h luaconf.h ldebug.h lstate.h lobject.h \
  ltable.h lvm.h ljumptab.h
 lzio.o: lzio.c lprefix.h lua.h luaconf.h llimits.h lmem.h lstate.h \
  lobject.h ltm.h lzio.h
+gdb_print.o: lauxlib.c lobject.h lapi.h lstate.h lauxlib.h  lualib.h
 
 # (end of Makefile)
