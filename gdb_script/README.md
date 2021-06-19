@@ -1,4 +1,4 @@
-#gdb脚本
+# gdb脚本
 
 lua_script.py   python版本
 lua_script      gdb本身支持的版本
@@ -8,7 +8,7 @@ lua_script      gdb本身支持的版本
 打开
 vim ~/.gdbinit
 
-添加文件中
+在文件中添加
 source 脚本路径
 ```
 
