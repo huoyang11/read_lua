@@ -30,4 +30,11 @@ plua_Ttable  输出Table类型
 
 plua_str 输出TString类型
 参数1: TString *
+
+plua_code 输出指令集合
+参数1: lua_State *
+参数2: Proto* 
+
+plua_lscode 输出指令集合
+参数1: LexState *
 ```

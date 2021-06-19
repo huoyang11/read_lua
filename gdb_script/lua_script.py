@@ -44,7 +44,22 @@ class plua_str(gdb.Command):
             raise gdb.GdbError('输入参数数目不对')
         gdb.execute("p (char *)(((TString *)" + argv[0] + ")->contents)")
 
+class plua_code(gdb.Command):
+ 
+    def __init__(self):
+        super(self.__class__, self).__init__("plua_code", gdb.COMMAND_USER)
+ 
+    def invoke(self, args, from_tty):
+        argv = gdb.string_to_argv(args)
+        if len(argv) != 2:
+            raise gdb.GdbError('输入参数数目不对')
+        gdb.execute('printf "%s",PrintCode(' + argv[0] + "," + argv[1] + ")")
+
+
 plua_Tval()
 plua_Ttable()
 plua_table()
 plua_str()
+plua_code()
+
+gdb.execute("define plua_lscode\nplua_code $arg0->L $arg0->fs.f\nend")

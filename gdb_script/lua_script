@@ -10,6 +10,14 @@ define plua_table
 printf "%s",print_table($arg0,$arg1)
 end
 
-deinfe plua_str
+define plua_str
 p (char *)(((TString *)$arg0)->contents)
+end
+
+define plua_code
+printf "%s",PrintCode($arg0,$arg1)
+end
+
+define plua_lscode
+plua_code $arg0->L $arg0->fs.f
 end
