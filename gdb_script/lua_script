@@ -1,3 +1,15 @@
 define plua_Tval
 p print_value($arg0,$arg1)
 end
+
+define plua_Ttable
+printf "%s",print_table($arg0,hvalue($arg1))
+end
+
+define plua_table
+printf "%s",print_table($arg0,$arg1)
+end
+
+deinfe plua_str
+p (char *)(((TString *)$arg0)->contents)
+end
