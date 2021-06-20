@@ -470,14 +470,14 @@ static void singlevar (LexState *ls, expdesc *var) {
 static void adjust_assign (LexState *ls, int nvars, int nexps, expdesc *e) {
   FuncState *fs = ls->fs;
   int needed = nvars - nexps;  /* extra values needed */
-  if (hasmultret(e->k)) {  /* last expression has multiple returns? */
+  if (hasmultret(e->k)) {  //最后一个表达式有多个返回(函数返回多个值)
     int extra = needed + 1;  /* discount last expression itself */
     if (extra < 0)
       extra = 0;
     luaK_setreturns(fs, e, extra);  /* last exp. provides the difference */
   }
   else {
-    if (e->k != VVOID)  /* at least one expression? */
+    if (e->k != VVOID)  //最少一个表达式
       luaK_exp2nextreg(fs, e);  /* close last expression */
     if (needed > 0)  /* missing values? */
       luaK_nil(fs, fs->freereg, needed);  /* complete with nils */
@@ -1724,7 +1724,7 @@ static void localstat (LexState *ls) {
   expdesc e;
   do {
     vidx = new_localvar(ls, str_checkname(ls)); //分配一个Vardesc,返回其数组下标
-    kind = getlocalattribute(ls);
+    kind = getlocalattribute(ls);   // <const> 或者 <close>
     getlocalvardesc(fs, vidx)->vd.kind = kind;  //根据new_localvar返回的下标找到对应的结构
     if (kind == RDKTOCLOSE) {  /* to-be-closed? */
       if (toclose != -1)  /* one already present? */
@@ -1734,7 +1734,7 @@ static void localstat (LexState *ls) {
     nvars++;  //局部变量数量
   } while (testnext(ls, ','));//是否还有后续的局部变量  (如 a,b = 10,20)
   if (testnext(ls, '='))
-    nexps = explist(ls, &e);
+    nexps = explist(ls, &e); // '=' 右边的处理  nexps为右值的数量   10,20
   else {
     e.k = VVOID;
     nexps = 0;

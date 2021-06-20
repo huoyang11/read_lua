@@ -21,3 +21,7 @@ end
 define plua_lscode
 plua_code $arg0->L $arg0->fs.f
 end
+
+define plua_token
+p print_token($arg0->t.token)
+end
