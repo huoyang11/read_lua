@@ -1915,11 +1915,11 @@ static void mainfunc (LexState *ls, FuncState *fs) {
   Upvaldesc *env;
   open_func(ls, fs, &bl);
   setvararg(fs, 0);  /* main function is always declared vararg */
-  env = allocupvalue(fs);  /* ...set environment upvalue */
+  env = allocupvalue(fs);  //申请f->upvalues内存
   env->instack = 1;
   env->idx = 0;
   env->kind = VDKREG;
-  env->name = ls->envn;
+  env->name = ls->envn;    //_ENV
   luaC_objbarrier(ls->L, fs->f, env->name);
   luaX_next(ls);  /* read first token */
   statlist(ls);  //解析入口
