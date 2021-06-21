@@ -1259,15 +1259,15 @@ static BinOpr subexpr (LexState *ls, expdesc *v, int limit) {
   else simpleexp(ls, v);
   /* expand while operators have priorities higher than 'limit' */
   op = getbinopr(ls->t.token);
-  while (op != OPR_NOBINOPR && priority[op].left > limit) {
+  while (op != OPR_NOBINOPR && priority[op].left > limit) { //优先级必须大于limit 并且是 运算符
     expdesc v2;
     BinOpr nextop;
     int line = ls->linenumber;
     luaX_next(ls);  /* skip operator */
     luaK_infix(ls->fs, op, v);
     /* read sub-expression with higher priority */
-    nextop = subexpr(ls, &v2, priority[op].right);
-    luaK_posfix(ls->fs, op, v, &v2, line);
+    nextop = subexpr(ls, &v2, priority[op].right); //递归获得右操作数
+    luaK_posfix(ls->fs, op, v, &v2, line); //如果是纯数字操作直接运算出结果,如果有变量等需要程序动态获得值的操作需要编码
     op = nextop;
   }
   leavelevel(ls);

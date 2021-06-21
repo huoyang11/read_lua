@@ -1316,9 +1316,9 @@ static int constfolding (FuncState *fs, int op, expdesc *e1,
                                         const expdesc *e2) {
   TValue v1, v2, res;
   if (!tonumeral(e1, &v1) || !tonumeral(e2, &v2) || !validop(op, &v1, &v2))
-    return 0;  /* non-numeric operands or not safe to fold */
-  luaO_rawarith(fs->ls->L, op, &v1, &v2, &res);  /* does operation */
-  if (ttisinteger(&res)) {
+    return 0;  //如果不是纯数字计算
+  luaO_rawarith(fs->ls->L, op, &v1, &v2, &res);  //计算e1 e2 运算的数值 res为计算的结果
+  if (ttisinteger(&res)) { //如果计算结果是int
     e1->k = VKINT;
     e1->u.ival = ivalue(&res);
   }
@@ -1448,8 +1448,8 @@ static void codearith (FuncState *fs, BinOpr opr,
 static void codecommutative (FuncState *fs, BinOpr op,
                              expdesc *e1, expdesc *e2, int line) {
   int flip = 0;
-  if (tonumeral(e1, NULL)) {  /* is first operand a numeric constant? */
-    swapexps(e1, e2);  /* change order */
+  if (tonumeral(e1, NULL)) {  //如果第一个算式是一个数字 如果local a = 2 * b
+    swapexps(e1, e2);  //交换 e1 e2
     flip = 1;
   }
   if (op == OPR_ADD && isSCint(e2))  /* immediate operand? */
@@ -1642,7 +1642,7 @@ static void codeconcat (FuncState *fs, expdesc *e1, expdesc *e2, int line) {
 void luaK_posfix (FuncState *fs, BinOpr opr,
                   expdesc *e1, expdesc *e2, int line) {
   luaK_dischargevars(fs, e2);
-  if (foldbinop(opr) && constfolding(fs, opr + LUA_OPADD, e1, e2))
+  if (foldbinop(opr) && constfolding(fs, opr + LUA_OPADD, e1, e2)) //如果可以直接计算结果直接返回
     return;  /* done by folding */
   switch (opr) {
     case OPR_AND: {
