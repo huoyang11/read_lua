@@ -1629,9 +1629,9 @@ static void test_then_block (LexState *ls, int *escapelist) {
   FuncState *fs = ls->fs;
   expdesc v;
   int jf;  /* instruction to skip 'then' code (if condition is false) */
-  luaX_next(ls);  /* skip IF or ELSEIF */
-  expr(ls, &v);  /* read condition */
-  checknext(ls, TK_THEN);
+  luaX_next(ls);  /* skip IF or ELSEIF */ // if a==1 then
+  expr(ls, &v);  //if 条件 计算值
+  checknext(ls, TK_THEN); //判断是否是 then
   if (ls->t.token == TK_BREAK) {  /* 'if x then break' ? */
     int line = ls->linenumber;
     luaK_goiffalse(ls->fs, &v);  /* will jump if condition is true */
@@ -1669,7 +1669,7 @@ static void ifstat (LexState *ls, int line) {
     test_then_block(ls, &escapelist);  /* ELSEIF cond THEN block */
   if (testnext(ls, TK_ELSE))
     block(ls);  /* 'else' part */
-  check_match(ls, TK_END, TK_IF, line);
+  check_match(ls, TK_END, TK_IF, line); //查看 是否是end关键字
   luaK_patchtohere(fs, escapelist);  /* patch escape list to 'if' end */
 }
 
@@ -1835,7 +1835,7 @@ static void statement (LexState *ls) {
   int line = ls->linenumber;  /* may be needed for error messages */
   enterlevel(ls);
   switch (ls->t.token) {
-    case ';': {  /* stat -> ';' (empty statement) */
+    case ';': {  //忽略 ';'
       luaX_next(ls);  /* skip ';' */
       break;
     }
