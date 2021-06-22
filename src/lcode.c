@@ -539,13 +539,13 @@ static void freeexps (FuncState *fs, expdesc *e1, expdesc *e2) {
 ** Note that all functions share the same table, so entering or exiting
 ** a function can make some indices wrong.
 */
-static int addk (FuncState *fs, TValue *key, TValue *v) {
+static int addk (FuncState *fs, TValue *key, TValue *v) { //添加常量
   TValue val;
   lua_State *L = fs->ls->L;
   Proto *f = fs->f;
   const TValue *idx = luaH_get(fs->ls->h, key);  /* query scanner table */
   int k, oldsize;
-  if (ttisinteger(idx)) {  /* is there an index there? */
+  if (ttisinteger(idx)) {  //如果是int类型,说明这个key已经有了
     k = cast_int(ivalue(idx));
     /* correct value? (warning: must distinguish floats from integers!) */
     if (k < fs->nk && ttypetag(&f->k[k]) == ttypetag(v) &&
@@ -558,7 +558,7 @@ static int addk (FuncState *fs, TValue *key, TValue *v) {
   /* numerical value does not need GC barrier;
      table has no metatable, so it does not need to invalidate cache */
   setivalue(&val, k);
-  luaH_finishset(L, fs->ls->h, key, idx, &val);
+  luaH_finishset(L, fs->ls->h, key, idx, &val); //fs->ls->h[idx] = k
   luaM_growvector(L, f->k, k, f->sizek, TValue, MAXARG_Ax, "constants");
   while (oldsize < f->sizek) setnilvalue(&f->k[oldsize++]);
   setobj(L, &f->k[k], v);
@@ -807,15 +807,15 @@ void luaK_dischargevars (FuncState *fs, expdesc *e) {
 static void discharge2reg (FuncState *fs, expdesc *e, int reg) {
   luaK_dischargevars(fs, e);
   switch (e->k) {
-    case VNIL: {
+    case VNIL: {  //nil
       luaK_nil(fs, reg, 1);
       break;
     }
-    case VFALSE: {
+    case VFALSE: { //false
       luaK_codeABC(fs, OP_LOADFALSE, reg, 0, 0);
       break;
     }
-    case VTRUE: {
+    case VTRUE: { //true
       luaK_codeABC(fs, OP_LOADTRUE, reg, 0, 0);
       break;
     }
@@ -826,15 +826,15 @@ static void discharge2reg (FuncState *fs, expdesc *e, int reg) {
       luaK_codek(fs, reg, e->u.info);
       break;
     }
-    case VKFLT: {
+    case VKFLT: { //float
       luaK_float(fs, reg, e->u.nval);
       break;
     }
-    case VKINT: {
+    case VKINT: { //int
       luaK_int(fs, reg, e->u.ival);
       break;
     }
-    case VRELOC: {
+    case VRELOC: { //添加寄存器
       Instruction *pc = &getinstruction(fs, e);
       SETARG_A(*pc, reg);  /* instruction will put result in 'reg' */
       break;

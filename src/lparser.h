@@ -64,13 +64,13 @@ typedef enum {
 #define vkisvar(k)	(VLOCAL <= (k) && (k) <= VINDEXSTR)
 #define vkisindexed(k)	(VINDEXED <= (k) && (k) <= VINDEXSTR)
 
-
+//解析过程中缓存的信息结构体
 typedef struct expdesc {
-  expkind k;
+  expkind k;    //当前解析的状态
   union {
-    lua_Integer ival;    /* for VKINT */
-    lua_Number nval;  /* for VKFLT */
-    TString *strval;  /* for VKSTR */
+    lua_Integer ival;    //如果状态是VKINT,这个变量保存int的值
+    lua_Number nval;     //如果状态是VKFLT,这个变量保存float的值
+    TString *strval;     //如果状态是VKSTR,这个变量保存string的值
     int info;  /* for generic use */
     struct {  /* for indexed variables */
       short idx;  /* index (R or "long" K) */
@@ -98,8 +98,8 @@ typedef union Vardesc {
     TValuefields;  /* constant value (if it is a compile-time constant) */
     lu_byte kind;
     lu_byte ridx;  /* register holding the variable */
-    short pidx;  /* index of the variable in the Proto's 'locvars' array */
-    TString *name;  /* variable name */
+    short pidx;     //Proto->locvars数组的下标
+    TString *name;  //变量名
   } vd;
   TValue k;  /* constant value (if any) */
 } Vardesc;
@@ -146,15 +146,15 @@ typedef struct FuncState {
   struct FuncState *prev;  /* enclosing function */
   struct LexState *ls;  /* lexical state */
   struct BlockCnt *bl;  /* chain of current blocks */
-  int pc;  /* next position to code (equivalent to 'ncode') */
+  int pc;             //f->code 下一个可用的位置
   int lasttarget;   /* 'label' of last 'jump label' */
   int previousline;  /* last line that was saved in 'lineinfo' */
-  int nk;  /* number of elements in 'k' */
-  int np;  /* number of elements in 'p' */
+  int nk;             //'f->k' 中使用的元素数量
+  int np;             //'f->p' 中使用的元素数量
   int nabslineinfo;  /* number of elements in 'abslineinfo' */
   int firstlocal;  /* index of first local var (in Dyndata array) */
   int firstlabel;  /* index of first label (in 'dyd->label->arr') */
-  short ndebugvars;  /* number of elements in 'f->locvars' */
+  short ndebugvars;   //'f->locvars' 中使用的元素数量
   lu_byte nactvar;  /* number of active local variables */
   lu_byte nups;  /* number of upvalues */
   lu_byte freereg;  /* first free register */

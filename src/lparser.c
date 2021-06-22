@@ -92,7 +92,7 @@ static void checklimit (FuncState *fs, int v, int l, const char *what) {
 /*
 ** Test whether next token is 'c'; if so, skip it.
 */
-static int testnext (LexState *ls, int c) {
+static int testnext (LexState *ls, int c) { //如果当前的token是c 那么解析下一个阶段
   if (ls->t.token == c) {
     luaX_next(ls);
     return 1;
@@ -104,7 +104,7 @@ static int testnext (LexState *ls, int c) {
 /*
 ** Check that next token is 'c'.
 */
-static void check (LexState *ls, int c) {
+static void check (LexState *ls, int c) { //检查当前的token是否是 c 如果不是解析报错
   if (ls->t.token != c)
     error_expected(ls, c);
 }
@@ -113,7 +113,7 @@ static void check (LexState *ls, int c) {
 /*
 ** Check that next token is 'c' and skip it.
 */
-static void checknext (LexState *ls, int c) {
+static void checknext (LexState *ls, int c) { //如果当前的token不是c 那么解析报错 如果是解析下一个阶段
   check(ls, c);
   luaX_next(ls);
 }
@@ -139,7 +139,7 @@ static void check_match (LexState *ls, int what, int who, int where) {
   }
 }
 
-
+//检测token的状态是否是变量名,如果是返回这个变量名并且进入下一个解析阶段
 static TString *str_checkname (LexState *ls) {
   TString *ts;
   check(ls, TK_NAME);
@@ -148,7 +148,7 @@ static TString *str_checkname (LexState *ls) {
   return ts;
 }
 
-
+//初始化 解析过程结构
 static void init_exp (expdesc *e, expkind k, int i) {
   e->f = e->t = NO_JUMP;
   e->k = k;
@@ -172,7 +172,7 @@ static void codename (LexState *ls, expdesc *e) {
 ** Register a new local variable in the active 'Proto' (for debug
 ** information).
 */
-static int registerlocalvar (LexState *ls, FuncState *fs, TString *varname) {
+static int registerlocalvar (LexState *ls, FuncState *fs, TString *varname) { //添加局部变量信息
   Proto *f = fs->f;
   int oldsize = f->sizelocvars;
   luaM_growvector(ls->L, f->locvars, fs->ndebugvars, f->sizelocvars,
@@ -190,7 +190,7 @@ static int registerlocalvar (LexState *ls, FuncState *fs, TString *varname) {
 ** Create a new local variable with the given 'name'. Return its index
 ** in the function.
 */
-static int new_localvar (LexState *ls, TString *name) {
+static int new_localvar (LexState *ls, TString *name) { //创建一个局部变量结构
   lua_State *L = ls->L;
   FuncState *fs = ls->fs;
   Dyndata *dyd = ls->dyd;
@@ -339,7 +339,7 @@ static void removevars (FuncState *fs, int tolevel) {
 ** Search the upvalues of the function 'fs' for one
 ** with the given 'name'.
 */
-static int searchupvalue (FuncState *fs, TString *name) {
+static int searchupvalue (FuncState *fs, TString *name) { //查找upvalue
   int i;
   Upvaldesc *up = fs->f->upvalues;
   for (i = 0; i < fs->nups; i++) {
@@ -349,7 +349,7 @@ static int searchupvalue (FuncState *fs, TString *name) {
 }
 
 
-static Upvaldesc *allocupvalue (FuncState *fs) {
+static Upvaldesc *allocupvalue (FuncState *fs) {  //创建Upvaldesc结构
   Proto *f = fs->f;
   int oldsize = f->sizeupvalues;
   checklimit(fs, fs->nups + 1, MAXUPVAL, "upvalues");
@@ -387,7 +387,7 @@ static int newupvalue (FuncState *fs, TString *name, expdesc *v) {
 ** function 'fs'. If found, initialize 'var' with it and return
 ** its expression kind; otherwise return -1.
 */
-static int searchvar (FuncState *fs, TString *n, expdesc *var) {
+static int searchvar (FuncState *fs, TString *n, expdesc *var) { //查找局部变量
   int i;
   for (i = cast_int(fs->nactvar) - 1; i >= 0; i--) {
     Vardesc *vd = getlocalvardesc(fs, i);
@@ -452,13 +452,13 @@ static void singlevaraux (FuncState *fs, TString *n, expdesc *var, int base) {
 static void singlevar (LexState *ls, expdesc *var) {
   TString *varname = str_checkname(ls);
   FuncState *fs = ls->fs;
-  singlevaraux(fs, varname, var, 1);
+  singlevaraux(fs, varname, var, 1); //查找这个变量名,如果没有找到var->k的值是VVOID
   if (var->k == VVOID) {  /* global name? */
     expdesc key;
-    singlevaraux(fs, ls->envn, var, 1);  /* get environment variable */
+    singlevaraux(fs, ls->envn, var, 1);  //查找env
     lua_assert(var->k != VVOID);  /* this one must exist */
-    codestring(&key, varname);  /* key is variable name */
-    luaK_indexed(fs, var, &key);  /* env[varname] */
+    codestring(&key, varname);  //把key 赋值为字符串状态
+    luaK_indexed(fs, var, &key);  //env[varname]
   }
 }
 
@@ -1870,7 +1870,7 @@ static void statement (LexState *ls) {
       if (testnext(ls, TK_FUNCTION))  /* local function? */
         localfunc(ls);
       else
-        localstat(ls);
+        localstat(ls);  //局部变量解析
       break;
     }
     case TK_DBCOLON: {  /* stat -> label */

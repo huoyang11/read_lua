@@ -543,20 +543,20 @@ typedef struct Proto { //语法解析的输出
   lu_byte maxstacksize;  /* number of registers needed by this function */
   int sizeupvalues;  /* size of 'upvalues' */
   int sizek;  /* size of 'k' */
-  int sizecode;
-  int sizelineinfo;
-  int sizep;  /* size of 'p' */
-  int sizelocvars;
+  int sizecode;       //数组 code的大小
+  int sizelineinfo;   //数组 lineinfo的大小
+  int sizep;          //数组 p的大小
+  int sizelocvars;    //数组 locvars的大小
   int sizeabslineinfo;  /* size of 'abslineinfo' */
   int linedefined;  /* debug information  */
   int lastlinedefined;  /* debug information  */
   TValue *k;  /* constants used by the function */
-  Instruction *code;  /* opcodes */
-  struct Proto **p;  /* functions defined inside the function */
+  Instruction *code;    //编译成的字节码
+  struct Proto **p;     //子函数
   Upvaldesc *upvalues;  /* upvalue information */
-  ls_byte *lineinfo;  /* information about source lines (debug information) */
+  ls_byte *lineinfo;    // 行号信息 于code字节码的下标一一对应 (debug information)
   AbsLineInfo *abslineinfo;  /* idem */
-  LocVar *locvars;  /* information about local variables (debug information) */
+  LocVar *locvars;      //局部变量数组 (debug information)
   TString  *source;  /* used for debug information */
   GCObject *gclist;
 } Proto;
