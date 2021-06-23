@@ -1698,7 +1698,7 @@ void luaK_posfix (FuncState *fs, BinOpr opr,
         codebinexpval(fs, OP_SHR, e1, e2, line);
       break;
     }
-    case OPR_EQ: case OPR_NE: {
+    case OPR_EQ: case OPR_NE: { // '=='  '!='
       codeeq(fs, opr, e1, e2);
       break;
     }
