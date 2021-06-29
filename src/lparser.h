@@ -33,7 +33,7 @@ typedef enum {
   VKINT,  /* integer constant; ival = numerical integer value */
   VKSTR,  /* string constant; strval = TString address;
              (string is fixed by the lexer) */
-  VNONRELOC,  /* expression has its value in a fixed register;
+  VNONRELOC,  /* 表达式已经有了寄存器;
                  info = result register */
   VLOCAL,  /* local variable; var.ridx = register index;
               var.vidx = relative index in 'actvar.arr'  */

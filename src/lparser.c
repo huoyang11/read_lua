@@ -1632,7 +1632,7 @@ static void test_then_block (LexState *ls, int *escapelist) {
   luaX_next(ls);  /* skip IF or ELSEIF */ // if a==1 then
   expr(ls, &v);  //if 条件 计算值
   checknext(ls, TK_THEN); //判断是否是 then
-  if (ls->t.token == TK_BREAK) {  /* 'if x then break' ? */
+  if (ls->t.token == TK_BREAK) {  //break 当前必须是一个循环
     int line = ls->linenumber;
     luaK_goiffalse(ls->fs, &v);  /* will jump if condition is true */
     luaX_next(ls);  /* skip 'break' */

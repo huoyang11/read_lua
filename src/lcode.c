@@ -751,7 +751,7 @@ void luaK_setoneret (FuncState *fs, expdesc *e) {
 ** Ensure that expression 'e' is not a variable (nor a <const>).
 ** (Expression still may have jump lists.)
 */
-void luaK_dischargevars (FuncState *fs, expdesc *e) {
+void luaK_dischargevars (FuncState *fs, expdesc *e) { //e 不是变量，如果是变量进行处理
   switch (e->k) {
     case VCONST: {
       const2exp(const2val(fs, e), e);
@@ -977,7 +977,7 @@ void luaK_exp2val (FuncState *fs, expdesc *e) {
 ** Try to make 'e' a K expression with an index in the range of R/K
 ** indices. Return true iff succeeded.
 */
-static int luaK_exp2K (FuncState *fs, expdesc *e) {
+static int luaK_exp2K (FuncState *fs, expdesc *e) { //添加常量
   if (!hasjumps(e)) {
     int info;
     switch (e->k) {  /* move constants to 'k' */
@@ -1413,7 +1413,7 @@ static int finishbinexpneg (FuncState *fs, expdesc *e1, expdesc *e2,
   }
 }
 
-
+//交换
 static void swapexps (expdesc *e1, expdesc *e2) {
   expdesc temp = *e1; *e1 = *e2; *e2 = temp;  /* swap 'e1' and 'e2' */
 }
