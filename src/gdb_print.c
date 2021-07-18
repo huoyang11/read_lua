@@ -14,6 +14,10 @@
 #include "lapi.h"
 #include "ltable.h"
 #include "lstring.h"
+#include "llex.h"
+#include "lauxlib.h"
+#include "lualib.h"
+#include "ldo.h"
 
 #include "ldebug.h"
 #include "lobject.h"
@@ -592,4 +596,143 @@ const char *print_token(int token)
 
   const char *p = (char *)&token;
   return p;
+}
+
+typedef struct LoadF {
+  int n;  /* number of pre-read characters */
+  FILE *f;  /* file being read */
+  char buff[BUFSIZ];  /* area for reading file */
+} LoadF;
+
+static int skipBOM (LoadF *lf) {
+  const char *p = "\xEF\xBB\xBF";  /* UTF-8 BOM mark */
+  int c;
+  lf->n = 0;
+  do {
+    c = getc(lf->f);
+    if (c == EOF || c != *(const unsigned char *)p++) return c;
+    lf->buff[lf->n++] = c;  /* to be read by the parser */
+  } while (*p != '\0');
+  lf->n = 0;  /* prefix matched; discard it */
+  return getc(lf->f);  /* return next character */
+}
+
+static int skipcomment (LoadF *lf, int *cp) {
+  int c = *cp = skipBOM(lf);
+  if (c == '#') {  /* first line is a comment (Unix exec. file)? */
+    do {  /* skip first line */
+      c = getc(lf->f);
+    } while (c != EOF && c != '\n');
+    *cp = getc(lf->f);  /* skip end-of-line, if present */
+    return 1;  /* there was a comment */
+  }
+  else return 0;  /* no comment */
+}
+
+static int loadF_init(const char *filename,LoadF *lf)
+{
+  if (!lf) return -1;
+
+  int c;
+
+  lf->f = fopen(filename, "r");
+  if (!lf->f) {
+    return -1;
+  }
+
+  if (skipcomment(lf, &c))  /* read initial portion */
+    lf->buff[lf->n++] = '\n';  /* add line to correct line numbers */
+  if (c == LUA_SIGNATURE[0] && filename) {  //lua的二进制文件
+    lf->f = freopen(filename, "rb", lf->f);
+    if (lf->f == NULL) return -1;
+    skipcomment(lf, &c);
+  }
+  if (c != EOF)
+    lf->buff[lf->n++] = c;
+
+  return 0;
+}
+
+static int loadF_uninit(LoadF *lf)
+{
+  if (!lf) return -1;
+
+  fclose(lf->f);
+
+  return 0;
+}
+
+static const char *getF (lua_State *L, void *ud, size_t *size) {
+  LoadF *lf = (LoadF *)ud;
+  (void)L;  /* not used */
+  if (lf->n > 0) {  //有预读取的字符串
+    *size = lf->n;  /* return them (chars already in buffer) */
+    lf->n = 0;  /* no more pre-read characters */
+  }
+  else {  /* read a block from file */
+    /* 'fread' can return > 0 *and* set the EOF flag. If next call to
+       'getF' called 'fread', it might still wait for user input.
+       The next check avoids this problem. */
+    if (feof(lf->f)) return NULL;
+    *size = fread(lf->buff, 1, sizeof(lf->buff), lf->f);  /* read block */
+  }
+  return lf->buff;
+}
+
+//输出当前lua文件token
+const char *print_tokens(LexState *ls)
+{
+  LoadF lf;
+  ZIO z;
+  int len = 0;
+  int nextline = 0;
+  Mbuffer buff = {0};
+  LexState lexstate;
+  int numline = 1;
+  lua_State *L = luaL_newstate();
+  const char *filename = (char *)(ls->source->contents) + 1;
+  static char buf[BUFFSIZE] = {0};
+  memset(buf,0,BUFFSIZE);
+
+  luaL_openlibs(L);
+  loadF_init(filename,&lf);
+  luaZ_init(L, &z, getF, &lf);
+  int c = zgetc(&z);
+  lexstate.buff = &buff;
+  lexstate.h = luaH_new(L);
+  sethvalue2s(L, L->top, lexstate.h);  /* anchor it */
+  luaD_inctop(L);
+  luaX_setinput(L, &lexstate, &z, ls->source, c);
+
+  luaX_next(&lexstate);
+  while (lexstate.t.token != TK_EOS) {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s ",print_token(lexstate.t.token));
+    if (numline != lexstate.linenumber) {
+      int i = len - 2;
+      nextline = lexstate.linenumber - numline;
+      while (*(buf + i--) != ' ' && i > 0);
+      if (i != 0) {
+        if (lexstate.linenumber - nextline == ls->linenumber) {
+          char tem[LUA_MINBUFFER] = {0};
+          memcpy(tem,buf + i + 2,LUA_MINBUFFER);
+          len = i + 2;
+          len += snprintf(buf + len,BUFFSIZE - len,"      %s%s","<-----------\n",tem);
+        } else {
+          *(buf + i + 1) = '\n';
+        }
+      }
+
+      numline = lexstate.linenumber;
+    }
+    luaX_next(&lexstate);
+  }
+  len += snprintf(buf + len,BUFFSIZE - len,"%s","\n");
+
+  L->top--;
+  //luaH_free(L,lexstate.h);  //加入gc不需要自己释放(坑了我一个多小时，大坑大坑)
+  luaZ_freebuffer(L, lexstate.buff);
+  loadF_uninit(&lf);
+  lua_close(L);
+  
+  return buf;
 }

@@ -227,8 +227,8 @@ static Vardesc *getlocalvardesc (FuncState *fs, int vidx) {
 ** that is in a register and uses its register index ('ridx') plus one.
 */
 static int reglevel (FuncState *fs, int nvar) {
-  while (nvar-- > 0) {
-    Vardesc *vd = getlocalvardesc(fs, nvar);  /* get previous variable */
+  while (nvar-- > 0) { //-- 
+    Vardesc *vd = getlocalvardesc(fs, nvar);  //获取的是上一个变量
     if (vd->vd.kind != RDKCTC)  /* is in a register? */
       return vd->vd.ridx + 1;
   }
@@ -313,7 +313,7 @@ static void adjustlocalvars (LexState *ls, int nvars) {
   int reglevel = luaY_nvarstack(fs);
   int i;
   for (i = 0; i < nvars; i++) {
-    int vidx = fs->nactvar++;
+    int vidx = fs->nactvar++; //局部变量计数
     Vardesc *var = getlocalvardesc(fs, vidx);
     var->vd.ridx = reglevel++;
     var->vd.pidx = registerlocalvar(ls, fs, var->vd.name);
@@ -452,7 +452,7 @@ static void singlevaraux (FuncState *fs, TString *n, expdesc *var, int base) {
 static void singlevar (LexState *ls, expdesc *var) {
   TString *varname = str_checkname(ls);
   FuncState *fs = ls->fs;
-  singlevaraux(fs, varname, var, 1); //查找这个变量名,如果没有找到var->k的值是VVOID
+  singlevaraux(fs, varname, var, 1); //查找这个变量名(upval和local),如果没有找到var->k的值是VVOID (函数名和全局变量是VVOID)
   if (var->k == VVOID) {  /* global name? */
     expdesc key;
     singlevaraux(fs, ls->envn, var, 1);  //查找env
@@ -628,12 +628,13 @@ static void movegotosout (FuncState *fs, BlockCnt *bl) {
 
 
 static void enterblock (FuncState *fs, BlockCnt *bl, lu_byte isloop) {
-  bl->isloop = isloop;
-  bl->nactvar = fs->nactvar;
+  bl->isloop = isloop;  //是否是循环
+  bl->nactvar = fs->nactvar; //局部变量数量
   bl->firstlabel = fs->ls->dyd->label.n;
   bl->firstgoto = fs->ls->dyd->gt.n;
   bl->upval = 0;
   bl->insidetbc = (fs->bl != NULL && fs->bl->insidetbc);
+  //加入fs->bl链表
   bl->previous = fs->bl;
   fs->bl = bl;
   lua_assert(fs->freereg == luaY_nvarstack(fs));
@@ -666,10 +667,10 @@ static void leaveblock (FuncState *fs) {
     hasclose = createlabel(ls, luaS_newliteral(ls->L, "break"), 0, 0);
   if (!hasclose && bl->previous && bl->upval)
     luaK_codeABC(fs, OP_CLOSE, stklevel, 0, 0);
-  fs->bl = bl->previous;
-  removevars(fs, bl->nactvar);
+  fs->bl = bl->previous; //链表回退
+  removevars(fs, bl->nactvar);  //局部变量回退到if之前
   lua_assert(bl->nactvar == fs->nactvar);
-  fs->freereg = stklevel;  /* free registers */
+  fs->freereg = stklevel;  //释放栈
   ls->dyd->label.n = bl->firstlabel;  /* remove local labels */
   if (bl->previous)  /* inner block? */
     movegotosout(fs, bl);  /* update pending gotos to outer block */
@@ -1275,7 +1276,7 @@ static BinOpr subexpr (LexState *ls, expdesc *v, int limit) {
 }
 
 
-static void expr (LexState *ls, expdesc *v) {
+static void expr (LexState *ls, expdesc *v) { //运算式处理
   subexpr(ls, v, 0);
 }
 
@@ -1630,7 +1631,7 @@ static void test_then_block (LexState *ls, int *escapelist) {
   expdesc v;
   int jf;  /* instruction to skip 'then' code (if condition is false) */
   luaX_next(ls);  /* skip IF or ELSEIF */ // if a==1 then
-  expr(ls, &v);  //if 条件 计算值
+  expr(ls, &v);  //if 条件表达式
   checknext(ls, TK_THEN); //判断是否是 then
   if (ls->t.token == TK_BREAK) {  //break 当前必须是一个循环
     int line = ls->linenumber;
@@ -1648,11 +1649,11 @@ static void test_then_block (LexState *ls, int *escapelist) {
   }
   else {  /* regular case (not a break) */
     luaK_goiftrue(ls->fs, &v);  /* skip over block if condition is false */
-    enterblock(fs, &bl, 0);
+    enterblock(fs, &bl, 0); //初始化 bl 保存当前局部变量的信息
     jf = v.f;
   }
-  statlist(ls);  /* 'then' part */
-  leaveblock(fs);
+  statlist(ls);  //if中的语句解析
+  leaveblock(fs);   //回退局部变量信息
   if (ls->t.token == TK_ELSE ||
       ls->t.token == TK_ELSEIF)  /* followed by 'else'/'elseif'? */
     luaK_concat(fs, escapelist, luaK_jump(fs));  /* must jump over it */
@@ -1665,8 +1666,8 @@ static void ifstat (LexState *ls, int line) {
   FuncState *fs = ls->fs;
   int escapelist = NO_JUMP;  /* exit list for finished parts */
   test_then_block(ls, &escapelist);  /* IF cond THEN block */
-  while (ls->t.token == TK_ELSEIF)
-    test_then_block(ls, &escapelist);  /* ELSEIF cond THEN block */
+  while (ls->t.token == TK_ELSEIF)    //多分支 else if
+    test_then_block(ls, &escapelist); 
   if (testnext(ls, TK_ELSE))
     block(ls);  /* 'else' part */
   check_match(ls, TK_END, TK_IF, line); //查看 是否是end关键字
@@ -1786,11 +1787,11 @@ static void exprstat (LexState *ls) {
   FuncState *fs = ls->fs;
   struct LHS_assign v;
   suffixedexp(ls, &v.v);
-  if (ls->t.token == '=' || ls->t.token == ',') { /* stat -> assignment ? */
+  if (ls->t.token == '=' || ls->t.token == ',') { /* stat -> assignment ? */ //全局变量
     v.prev = NULL;
     restassign(ls, &v, 1);
   }
-  else {  /* stat -> func */
+  else {  /* stat -> func */ //函数调用
     Instruction *inst;
     check_condition(ls, v.v.k == VCALL, "syntax error");
     inst = &getinstruction(fs, &v.v);

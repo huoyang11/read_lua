@@ -309,7 +309,7 @@ void luaK_patchlist (FuncState *fs, int list, int target) {
 
 
 void luaK_patchtohere (FuncState *fs, int list) {
-  int hr = luaK_getlabel(fs);  /* mark "here" as a jump target */
+  int hr = luaK_getlabel(fs);  //fs->lasttarget 保存pc指针  返回当前pc指针的值
   luaK_patchlist(fs, list, hr);
 }
 
@@ -1117,8 +1117,8 @@ void luaK_goiftrue (FuncState *fs, expdesc *e) {
   luaK_dischargevars(fs, e);
   switch (e->k) {
     case VJMP: {  /* condition? */
-      negatecondition(fs, e);  /* jump when it is false */
-      pc = e->u.info;  /* save jump position */
+      negatecondition(fs, e);  //jmp指令上一条EQ EQI类似指令 的k值取反  编码是使用的是(opr == OPR_EQ) 暂时不清楚为什么不直接编码,要在这里反转
+      pc = e->u.info;  //保存jmp指令的位置
       break;
     }
     case VK: case VKFLT: case VKINT: case VKSTR: case VTRUE: {
@@ -1259,15 +1259,15 @@ static int isSCnumber (expdesc *e, int *pi, int *isfloat) {
 */
 void luaK_indexed (FuncState *fs, expdesc *t, expdesc *k) {
   if (k->k == VKSTR)
-    str2K(fs, k);
+    str2K(fs, k); //添加常量  k->u.info是常量的下标
   lua_assert(!hasjumps(t) &&
              (t->k == VLOCAL || t->k == VNONRELOC || t->k == VUPVAL));
   if (t->k == VUPVAL && !isKstr(fs, k))  /* upvalue indexed by non 'Kstr'? */
     luaK_exp2anyreg(fs, t);  /* put it in a register */
   if (t->k == VUPVAL) {
-    t->u.ind.t = t->u.info;  /* upvalue index */
-    t->u.ind.idx = k->u.info;  /* literal string */
-    t->k = VINDEXUP;
+    t->u.ind.t = t->u.info;    //env表的下标
+    t->u.ind.idx = k->u.info;  //常量表的下标
+    t->k = VINDEXUP;           //编码成 UpValue[t->u.info][K[k->u.info]] (在env表中获取key是K[k->u.info]的值)
   }
   else {
     /* register index of the table */
@@ -1574,36 +1574,36 @@ void luaK_prefix (FuncState *fs, UnOpr op, expdesc *e, int line) {
 void luaK_infix (FuncState *fs, BinOpr op, expdesc *v) {
   luaK_dischargevars(fs, v);
   switch (op) {
-    case OPR_AND: {
+    case OPR_AND: {  // &&
       luaK_goiftrue(fs, v);  /* go ahead only if 'v' is true */
       break;
     }
-    case OPR_OR: {
+    case OPR_OR: {  // ||
       luaK_goiffalse(fs, v);  /* go ahead only if 'v' is false */
       break;
     }
-    case OPR_CONCAT: {
+    case OPR_CONCAT: { //字符串拼接
       luaK_exp2nextreg(fs, v);  /* operand must be on the stack */
       break;
     }
-    case OPR_ADD: case OPR_SUB:
-    case OPR_MUL: case OPR_DIV: case OPR_IDIV:
-    case OPR_MOD: case OPR_POW:
-    case OPR_BAND: case OPR_BOR: case OPR_BXOR:
-    case OPR_SHL: case OPR_SHR: {
+    case OPR_ADD: case OPR_SUB: //+ -
+    case OPR_MUL: case OPR_DIV: case OPR_IDIV: // *  /
+    case OPR_MOD: case OPR_POW: // %  ^
+    case OPR_BAND: case OPR_BOR: case OPR_BXOR: //& | ~
+    case OPR_SHL: case OPR_SHR: { //<<  >>
       if (!tonumeral(v, NULL))
         luaK_exp2anyreg(fs, v);
       /* else keep numeral, which may be folded with 2nd operand */
       break;
     }
-    case OPR_EQ: case OPR_NE: {
+    case OPR_EQ: case OPR_NE: { // == !=
       if (!tonumeral(v, NULL))
         luaK_exp2RK(fs, v);
       /* else keep numeral, which may be an immediate operand */
       break;
     }
-    case OPR_LT: case OPR_LE:
-    case OPR_GT: case OPR_GE: {
+    case OPR_LT: case OPR_LE:   // < <=
+    case OPR_GT: case OPR_GE: { // > >=
       int dummy, dummy2;
       if (!isSCnumber(v, &dummy, &dummy2))
         luaK_exp2anyreg(fs, v);

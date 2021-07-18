@@ -97,7 +97,7 @@ typedef union Vardesc {
   struct {
     TValuefields;  /* constant value (if it is a compile-time constant) */
     lu_byte kind;
-    lu_byte ridx;  /* register holding the variable */
+    lu_byte ridx;   //变量在栈的位置
     short pidx;     //Proto->locvars数组的下标
     TString *name;  //变量名
   } vd;
@@ -128,8 +128,8 @@ typedef struct Labellist {
 typedef struct Dyndata {
   struct {  /* list of all active local variables */
     Vardesc *arr;
-    int n;
-    int size;
+    int n;    //当前使用
+    int size; //大小
   } actvar;
   Labellist gt;  /* list of pending gotos */
   Labellist label;   /* list of active labels */
@@ -155,7 +155,7 @@ typedef struct FuncState {
   int firstlocal;  /* index of first local var (in Dyndata array) */
   int firstlabel;  /* index of first label (in 'dyd->label->arr') */
   short ndebugvars;   //'f->locvars' 中使用的元素数量
-  lu_byte nactvar;  /* number of active local variables */
+  lu_byte nactvar;  //当前的局部变量数量
   lu_byte nups;  /* number of upvalues */
   lu_byte freereg;  /* first free register */
   lu_byte iwthabs;  /* instructions issued since last absolute line info */

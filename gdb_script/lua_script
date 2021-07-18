@@ -1,27 +1,55 @@
 define plua_Tval
+if $argc != 2
+    p "参数数目错误,{plua_Tval lua_State *, TValue *}"
+end
 p print_value($arg0,$arg1)
 end
 
 define plua_Ttable
+if $argc != 2
+    p "参数数目错误,{plua_Ttable lua_State *, TValue *}"
+end
 printf "%s",print_table($arg0,hvalue($arg1))
 end
 
 define plua_table
+if $argc != 2
+    p "参数数目错误,{plua_table lua_State *, Table *}"
+end
 printf "%s",print_table($arg0,$arg1)
 end
 
 define plua_str
+if $argc != 1
+    p "参数数目错误,{plua_str TString *}"
+end
 p (char *)(((TString *)$arg0)->contents)
 end
 
 define plua_code
+if $argc != 2
+    p "参数数目错误,{plua_code lua_State *, Proto *}"
+end
 printf "%s",PrintCode($arg0,$arg1)
 end
 
 define plua_lscode
+if $argc != 1
+    p "参数数目错误,{plua_lscode LexState *}"
+end
 plua_code $arg0->L $arg0->fs.f
 end
 
 define plua_token
+if $argc != 1
+    p "参数数目错误,{plua_token LexState *}"
+end
 p print_token($arg0->t.token)
+end
+
+define plua_tokens
+if $argc != 1
+    p "参数数目错误,{plua_tokens LexState *}"
+end
+printf "%s",print_tokens($arg0)
 end

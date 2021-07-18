@@ -1,6 +1,5 @@
 # gdb脚本
 
-lua_script.py   python版本
 lua_script      gdb本身支持的版本
 
 ## 加载
@@ -36,5 +35,11 @@ plua_code 输出指令集合
 参数2: Proto* 
 
 plua_lscode 输出指令集合
+参数1: LexState *
+
+plua_token 输出当前解析的token
+参数1: LexState *
+
+plua_tokens 输出当前文件的所有token
 参数1: LexState *
 ```
