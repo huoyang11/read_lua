@@ -33,6 +33,7 @@ plua_str 输出TString类型
 plua_code 输出指令集合
 参数1: lua_State *
 参数2: Proto* 
+参数3: int
 
 plua_lscode 输出指令集合
 参数1: LexState *

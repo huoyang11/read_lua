@@ -27,17 +27,17 @@ p (char *)(((TString *)$arg0)->contents)
 end
 
 define plua_code
-if $argc != 2
-    p "参数数目错误,{plua_code lua_State *, Proto *}"
+if $argc != 3
+    p "参数数目错误,{plua_code lua_State *, Proto *,int}"
 end
-printf "%s",PrintCode($arg0,$arg1)
+printf "%s",PrintCode($arg0,$arg1,$arg2)
 end
 
 define plua_lscode
 if $argc != 1
     p "参数数目错误,{plua_lscode LexState *}"
 end
-plua_code $arg0->L $arg0->fs.f
+plua_code $arg0->L $arg0->fs.f $arg0->fs.pc
 end
 
 define plua_token

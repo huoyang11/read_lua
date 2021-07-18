@@ -242,14 +242,14 @@ const char *PrintConstant(const Proto* f, int i)
 }
 
 //输出编译成的指令集
-const char *PrintCode(lua_State* L,const Proto* f)
+const char *PrintCode(lua_State* L,const Proto* f,int n)
 {
  int len = 0;
  tmname=G(L)->tmname;
  static char buf[BUFFSIZE] = {0};
  memset(buf,0,BUFFSIZE);
  const Instruction* code=f->code;
- int pc,n=f->sizecode;
+ int pc;
  for (pc=0; pc<n; pc++)
  {
   Instruction i=code[pc];
@@ -716,7 +716,7 @@ const char *print_tokens(LexState *ls)
           char tem[LUA_MINBUFFER] = {0};
           memcpy(tem,buf + i + 2,LUA_MINBUFFER);
           len = i + 2;
-          len += snprintf(buf + len,BUFFSIZE - len,"      %s%s","<-----------\n",tem);
+          len += snprintf(buf + len,BUFFSIZE - len,"      %s%s%s%s","<-----------    ",print_token(ls->t.token),"\n",tem);
         } else {
           *(buf + i + 1) = '\n';
         }

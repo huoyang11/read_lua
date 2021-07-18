@@ -165,12 +165,12 @@ static int getjump (FuncState *fs, int pc) {
 */
 static void fixjump (FuncState *fs, int pc, int dest) {
   Instruction *jmp = &fs->f->code[pc];
-  int offset = dest - (pc + 1);
+  int offset = dest - (pc + 1);  //jmp相对位置
   lua_assert(dest != NO_JUMP);
   if (!(-OFFSET_sJ <= offset && offset <= MAXARG_sJ - OFFSET_sJ))
     luaX_syntaxerror(fs->ls, "control structure too long");
   lua_assert(GET_OPCODE(*jmp) == OP_JMP);
-  SETARG_sJ(*jmp, offset);
+  SETARG_sJ(*jmp, offset);      //调整jmp位置
 }
 
 

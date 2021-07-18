@@ -662,7 +662,7 @@ static void leaveblock (FuncState *fs) {
   BlockCnt *bl = fs->bl;
   LexState *ls = fs->ls;
   int hasclose = 0;
-  int stklevel = reglevel(fs, bl->nactvar);  /* level outside the block */
+  int stklevel = reglevel(fs, bl->nactvar);  //查找上一个块之前可用的局部变量栈索引
   if (bl->isloop)  /* fix pending breaks? */
     hasclose = createlabel(ls, luaS_newliteral(ls->L, "break"), 0, 0);
   if (!hasclose && bl->previous && bl->upval)
@@ -670,7 +670,7 @@ static void leaveblock (FuncState *fs) {
   fs->bl = bl->previous; //链表回退
   removevars(fs, bl->nactvar);  //局部变量回退到if之前
   lua_assert(bl->nactvar == fs->nactvar);
-  fs->freereg = stklevel;  //释放栈
+  fs->freereg = stklevel;  //回退栈
   ls->dyd->label.n = bl->firstlabel;  /* remove local labels */
   if (bl->previous)  /* inner block? */
     movegotosout(fs, bl);  /* update pending gotos to outer block */
@@ -1650,14 +1650,14 @@ static void test_then_block (LexState *ls, int *escapelist) {
   else {  /* regular case (not a break) */
     luaK_goiftrue(ls->fs, &v);  /* skip over block if condition is false */
     enterblock(fs, &bl, 0); //初始化 bl 保存当前局部变量的信息
-    jf = v.f;
+    jf = v.f;   //jf为jmp指令的位置
   }
   statlist(ls);  //if中的语句解析
   leaveblock(fs);   //回退局部变量信息
   if (ls->t.token == TK_ELSE ||
-      ls->t.token == TK_ELSEIF)  /* followed by 'else'/'elseif'? */
-    luaK_concat(fs, escapelist, luaK_jump(fs));  /* must jump over it */
-  luaK_patchtohere(fs, jf);
+      ls->t.token == TK_ELSEIF)  //如果有else和elseif块
+    luaK_concat(fs, escapelist, luaK_jump(fs));  //escapelist记录jmp指令的位置
+  luaK_patchtohere(fs, jf); //调整jmp跳转的位置
 }
 
 
@@ -1665,13 +1665,13 @@ static void ifstat (LexState *ls, int line) {
   /* ifstat -> IF cond THEN block {ELSEIF cond THEN block} [ELSE block] END */
   FuncState *fs = ls->fs;
   int escapelist = NO_JUMP;  /* exit list for finished parts */
-  test_then_block(ls, &escapelist);  /* IF cond THEN block */
-  while (ls->t.token == TK_ELSEIF)    //多分支 else if
+  test_then_block(ls, &escapelist);  //if/elseif解析函数  (escapelist返回else/elseif jmp指令的位置)
+  while (ls->t.token == TK_ELSEIF)    //多分支 elseif
     test_then_block(ls, &escapelist); 
-  if (testnext(ls, TK_ELSE))
+  if (testnext(ls, TK_ELSE)) //如果是else那么后续已经无jmp指令,所以不需要记录jmp指令的位置
     block(ls);  /* 'else' part */
-  check_match(ls, TK_END, TK_IF, line); //查看 是否是end关键字
-  luaK_patchtohere(fs, escapelist);  /* patch escape list to 'if' end */
+  check_match(ls, TK_END, TK_IF, line); //查看是否是end关键字
+  luaK_patchtohere(fs, escapelist);  //调整else/elseif jmp指令跳转的位置
 }
 
 
