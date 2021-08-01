@@ -40,6 +40,13 @@ end
 plua_code $arg0->L $arg0->fs.f $arg0->fs.pc
 end
 
+define plua_fscode
+if $argc != 1
+    p "参数数目错误,{plua_lscode FuncState *}"
+end
+plua_code $arg0->ls->L $arg0->f $arg0->pc
+end
+
 define plua_token
 if $argc != 1
     p "参数数目错误,{plua_token LexState *}"

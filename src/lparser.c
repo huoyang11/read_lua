@@ -545,16 +545,16 @@ static Labeldesc *findlabel (LexState *ls, TString *name) {
 /*
 ** Adds a new label/goto in the corresponding list.
 */
-static int newlabelentry (LexState *ls, Labellist *l, TString *name,
+static int newlabelentry (LexState *ls, Labellist *l, TString *name, //保存当前解析信息
                           int line, int pc) {
   int n = l->n;
   luaM_growvector(ls->L, l->arr, n, l->size,
                   Labeldesc, SHRT_MAX, "labels/gotos");
   l->arr[n].name = name;
-  l->arr[n].line = line;
-  l->arr[n].nactvar = ls->fs->nactvar;
+  l->arr[n].line = line;  //行号
+  l->arr[n].nactvar = ls->fs->nactvar; //局部变量数量
   l->arr[n].close = 0;
-  l->arr[n].pc = pc;
+  l->arr[n].pc = pc;      //指令位置
   l->n = n + 1;
   return n;
 }
@@ -570,11 +570,11 @@ static int newgotoentry (LexState *ls, TString *name, int line, int pc) {
 ** pending gotos in current block and solves them. Return true
 ** if any of the goto's need to close upvalues.
 */
-static int solvegotos (LexState *ls, Labeldesc *lb) {
+static int solvegotos (LexState *ls, Labeldesc *lb) { //修正所有要跳转到这个lable的跳转点
   Labellist *gl = &ls->dyd->gt;
   int i = ls->fs->bl->firstgoto;
   int needsclose = 0;
-  while (i < gl->n) {
+  while (i < gl->n) { //gl->n的值会在solvegoto 减一
     if (eqstr(gl->arr[i].name, lb->name)) {
       needsclose |= gl->arr[i].close;
       solvegoto(ls, i, lb);  /* will remove 'i' from the list */
@@ -602,7 +602,7 @@ static int createlabel (LexState *ls, TString *name, int line,
     /* assume that locals are already out of scope */
     ll->arr[l].nactvar = fs->bl->nactvar;
   }
-  if (solvegotos(ls, &ll->arr[l])) {  /* need close? */
+  if (solvegotos(ls, &ll->arr[l])) {  //修正所有要跳转到这个lable的跳转点
     luaK_codeABC(fs, OP_CLOSE, luaY_nvarstack(fs), 0, 0);
     return 1;
   }
@@ -663,7 +663,7 @@ static void leaveblock (FuncState *fs) {
   LexState *ls = fs->ls;
   int hasclose = 0;
   int stklevel = reglevel(fs, bl->nactvar);  //查找上一个块之前可用的局部变量栈索引
-  if (bl->isloop)  /* fix pending breaks? */
+  if (bl->isloop)  //如果是一个循环那么创建一个break的目标
     hasclose = createlabel(ls, luaS_newliteral(ls->L, "break"), 0, 0);
   if (!hasclose && bl->previous && bl->upval)
     luaK_codeABC(fs, OP_CLOSE, stklevel, 0, 0);
@@ -671,7 +671,7 @@ static void leaveblock (FuncState *fs) {
   removevars(fs, bl->nactvar);  //局部变量回退到if之前
   lua_assert(bl->nactvar == fs->nactvar);
   fs->freereg = stklevel;  //回退栈
-  ls->dyd->label.n = bl->firstlabel;  /* remove local labels */
+  ls->dyd->label.n = bl->firstlabel;  //回退lable
   if (bl->previous)  /* inner block? */
     movegotosout(fs, bl);  /* update pending gotos to outer block */
   else {
@@ -684,12 +684,12 @@ static void leaveblock (FuncState *fs) {
 /*
 ** adds a new prototype into list of prototypes
 */
-static Proto *addprototype (LexState *ls) {
+static Proto *addprototype (LexState *ls) { //申请一个Proto加入当前的Proto的子集
   Proto *clp;
   lua_State *L = ls->L;
   FuncState *fs = ls->fs;
   Proto *f = fs->f;  /* prototype of current function */
-  if (fs->np >= f->sizep) {
+  if (fs->np >= f->sizep) { //realloc
     int oldsize = f->sizep;
     luaM_growvector(L, f->p, fs->np, f->sizep, Proto *, MAXARG_Bx, "functions");
     while (oldsize < f->sizep)
@@ -951,7 +951,7 @@ static void parlist (LexState *ls) {
   Proto *f = fs->f;
   int nparams = 0;
   int isvararg = 0;
-  if (ls->t.token != ')') {  /* is 'parlist' not empty? */
+  if (ls->t.token != ')') {  //如果有函数参数
     do {
       switch (ls->t.token) {
         case TK_NAME: {
@@ -959,7 +959,7 @@ static void parlist (LexState *ls) {
           nparams++;
           break;
         }
-        case TK_DOTS: {
+        case TK_DOTS: {   // ...
           luaX_next(ls);
           isvararg = 1;
           break;
@@ -969,10 +969,10 @@ static void parlist (LexState *ls) {
     } while (!isvararg && testnext(ls, ','));
   }
   adjustlocalvars(ls, nparams);
-  f->numparams = cast_byte(fs->nactvar);
+  f->numparams = cast_byte(fs->nactvar); //参数个数
   if (isvararg)
-    setvararg(fs, f->numparams);  /* declared vararg */
-  luaK_reserveregs(fs, fs->nactvar);  /* reserve registers for parameters */
+    setvararg(fs, f->numparams);         //多参数
+  luaK_reserveregs(fs, fs->nactvar);     //分配寄存器
 }
 
 
@@ -980,17 +980,17 @@ static void body (LexState *ls, expdesc *e, int ismethod, int line) {
   /* body ->  '(' parlist ')' block END */
   FuncState new_fs;
   BlockCnt bl;
-  new_fs.f = addprototype(ls);
+  new_fs.f = addprototype(ls);  //申请一个Proto加入当前的Proto的子集
   new_fs.f->linedefined = line;
-  open_func(ls, &new_fs, &bl);
+  open_func(ls, &new_fs, &bl);  //初始化new_fs,把new_fs加入ls->fs链表
   checknext(ls, '(');
   if (ismethod) {
     new_localvarliteral(ls, "self");  /* create 'self' parameter */
     adjustlocalvars(ls, 1);
   }
-  parlist(ls);
+  parlist(ls);          //函数参数解析
   checknext(ls, ')');
-  statlist(ls);
+  statlist(ls);         //函数语句解析
   new_fs.f->lastlinedefined = ls->linenumber;
   check_match(ls, TK_END, TK_FUNCTION, line);
   codeclosure(ls, e);
@@ -1003,7 +1003,7 @@ static int explist (LexState *ls, expdesc *v) {
   int n = 1;  /* at least one expression */
   expr(ls, v);
   while (testnext(ls, ',')) {
-    luaK_exp2nextreg(ls->fs, v);
+    luaK_exp2nextreg(ls->fs, v); //压栈
     expr(ls, v);
     n++;
   }
@@ -1449,7 +1449,7 @@ static void labelstat (LexState *ls, TString *name, int line) {
   checknext(ls, TK_DBCOLON);  /* skip double colon */
   while (ls->t.token == ';' || ls->t.token == TK_DBCOLON)
     statement(ls);  /* skip other no-op statements */
-  checkrepeated(ls, name);  /* check for repeated labels */
+  checkrepeated(ls, name);  //检测lable是否创建过s
   createlabel(ls, name, line, block_follow(ls, 0));
 }
 
@@ -1460,16 +1460,16 @@ static void whilestat (LexState *ls, int line) {
   int whileinit;
   int condexit;
   BlockCnt bl;
-  luaX_next(ls);  /* skip WHILE */
-  whileinit = luaK_getlabel(fs);
-  condexit = cond(ls);
+  luaX_next(ls);  //跳过while
+  whileinit = luaK_getlabel(fs); //保存当前pc指针的位置(条件判断指令)
+  condexit = cond(ls); //while表达式处理
   enterblock(fs, &bl, 1);
   checknext(ls, TK_DO);
-  block(ls);
-  luaK_jumpto(fs, whileinit);
+  block(ls);           //while内的语句解析
+  luaK_jumpto(fs, whileinit);  //编码jmp并且jmp到条件判断
   check_match(ls, TK_END, TK_WHILE, line);
   leaveblock(fs);
-  luaK_patchtohere(fs, condexit);  /* false conditions finish the loop */
+  luaK_patchtohere(fs, condexit);  //调整跳出while块的jmp(while表达式的jmp)
 }
 
 
@@ -1775,9 +1775,9 @@ static void funcstat (LexState *ls, int line) {
   int ismethod;
   expdesc v, b;
   luaX_next(ls);  /* skip FUNCTION */
-  ismethod = funcname(ls, &v);
-  body(ls, &b, ismethod, line);
-  luaK_storevar(ls->fs, &v, &b);
+  ismethod = funcname(ls, &v);    //函数名加入全局变量表
+  body(ls, &b, ismethod, line);   //解析函数       编码:压入该函数的Proto数组的下标,函数名对应的结果
+  luaK_storevar(ls->fs, &v, &b);  //编码:全局变量(函数名)赋值   funcname = (Proto to closure)
   luaK_fixline(ls->fs, line);  /* definition "happens" in the first line */
 }
 
@@ -1804,13 +1804,13 @@ static void retstat (LexState *ls) {
   /* stat -> RETURN [explist] [';'] */
   FuncState *fs = ls->fs;
   expdesc e;
-  int nret;  /* number of values being returned */
+  int nret;  //返回值的个数
   int first = luaY_nvarstack(fs);  /* first slot to be returned */
   if (block_follow(ls, 1) || ls->t.token == ';')
     nret = 0;  /* return no values */
   else {
-    nret = explist(ls, &e);  /* optional return values */
-    if (hasmultret(e.k)) {
+    nret = explist(ls, &e);  //把返回值解析完都压入栈中
+    if (hasmultret(e.k)) {   //函数调用
       luaK_setmultret(fs, &e);
       if (e.k == VCALL && nret == 1 && !fs->bl->insidetbc) {  /* tail call? */
         SET_OPCODE(getinstruction(fs,&e), OP_TAILCALL);
@@ -1874,7 +1874,7 @@ static void statement (LexState *ls) {
         localstat(ls);  //局部变量解析
       break;
     }
-    case TK_DBCOLON: {  /* stat -> label */
+    case TK_DBCOLON: {  /* stat -> label */ //::lable::
       luaX_next(ls);  /* skip double colon */
       labelstat(ls, str_checkname(ls), line);
       break;

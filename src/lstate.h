@@ -194,8 +194,8 @@ typedef struct CallInfo {
       unsigned short ntransfer;  /* number of values transferred */
     } transferinfo;
   } u2;
-  short nresults;  /* expected number of results from this function */
-  unsigned short callstatus;
+  short nresults;   //返回值个数
+  unsigned short callstatus; //函数调用的状态
 } CallInfo;
 
 
