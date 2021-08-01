@@ -8,14 +8,14 @@
 #undef vmdispatch
 #undef vmcase
 #undef vmbreak
-
+//动态goto
 #define vmdispatch(x)     goto *disptab[x];
 
 #define vmcase(l)     L_##l:
 
 #define vmbreak		vmfetch(); vmdispatch(GET_OPCODE(i));
 
-
+//获取标签的所有地址
 static const void *const disptab[NUM_OPCODES] = {
 
 #if 0
