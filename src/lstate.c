@@ -179,14 +179,14 @@ LUAI_FUNC void luaE_incCstack (lua_State *L) {
 
 static void stack_init (lua_State *L1, lua_State *L) {
   int i; CallInfo *ci;
-  /* initialize stack array */
+  //申请空间
   L1->stack = luaM_newvector(L, BASIC_STACK_SIZE + EXTRA_STACK, StackValue);
   L1->tbclist = L1->stack;
   for (i = 0; i < BASIC_STACK_SIZE + EXTRA_STACK; i++)
-    setnilvalue(s2v(L1->stack + i));  /* erase new stack */
+    setnilvalue(s2v(L1->stack + i));  //初始化栈的值
   L1->top = L1->stack;
   L1->stack_last = L1->stack + BASIC_STACK_SIZE;
-  /* initialize first ci */
+  //初始化CallInfo (函数调用相关)
   ci = &L1->base_ci;
   ci->next = ci->previous = NULL;
   ci->callstatus = CIST_C;

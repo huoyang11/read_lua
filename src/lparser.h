@@ -131,8 +131,8 @@ typedef struct Dyndata {
     int n;    //当前使用
     int size; //大小
   } actvar;
-  Labellist gt;  /* list of pending gotos */
-  Labellist label;   /* list of active labels */
+  Labellist gt;      //保存解析信息数组。用于goto/break调整jmp指令位置
+  Labellist label;   //保存解析信息数组。用于做goto/break的目标
 } Dyndata;
 
 
