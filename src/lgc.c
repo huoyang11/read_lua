@@ -518,15 +518,15 @@ static void traversestrongtable (global_State *g, Table *h) {
   Node *n, *limit = gnodelast(h);
   unsigned int i;
   unsigned int asize = luaH_realasize(h);
-  for (i = 0; i < asize; i++)  /* traverse array part */
+  for (i = 0; i < asize; i++)               //遍历table的数组部分
     markvalue(g, &h->array[i]);
-  for (n = gnode(h, 0); n < limit; n++) {  /* traverse hash part */
-    if (isempty(gval(n)))  /* entry is empty? */
-      clearkey(n);  /* clear its key */
+  for (n = gnode(h, 0); n < limit; n++) {   //遍历table的hash部分
+    if (isempty(gval(n)))                   //如果value是nil
+      clearkey(n);                          //清除key
     else {
       lua_assert(!keyisnil(n));
-      markkey(g, n);
-      markvalue(g, gval(n));
+      markkey(g, n);                        //标记key
+      markvalue(g, gval(n));                //标记val
     }
   }
   genlink(g, obj2gco(h));
@@ -537,7 +537,7 @@ static lu_mem traversetable (global_State *g, Table *h) {
   const char *weakkey, *weakvalue;
   const TValue *mode = gfasttm(g, h->metatable, TM_MODE);
   markobjectN(g, h->metatable);
-  if (mode && ttisstring(mode) &&  /* is there a weak mode? */
+  if (mode && ttisstring(mode) &&  //是否有元表
       (cast_void(weakkey = strchr(svalue(mode), 'k')),
        cast_void(weakvalue = strchr(svalue(mode), 'v')),
        (weakkey || weakvalue))) {  /* is really weak? */
@@ -651,9 +651,9 @@ static int traversethread (global_State *g, lua_State *th) {
 */
 static lu_mem propagatemark (global_State *g) {
   GCObject *o = g->gray;
-  nw2black(o);
-  g->gray = *getgclist(o);  /* remove from 'gray' list */
-  switch (o->tt) {
+  nw2black(o);              //设置为黑色
+  g->gray = *getgclist(o);  //删除头节点
+  switch (o->tt) {          //遍历该节点的子节点
     case LUA_VTABLE: return traversetable(g, gco2t(o));
     case LUA_VUSERDATA: return traverseudata(g, gco2u(o));
     case LUA_VLCL: return traverseLclosure(g, gco2lcl(o));
@@ -1586,7 +1586,7 @@ static lu_mem singlestep (lua_State *L) {
       break;
     }
     case GCSpropagate: {
-      if (g->gray == NULL) {  /* no more gray objects? */
+      if (g->gray == NULL) {  //如果没有灰色节点
         g->gcstate = GCSenteratomic;  /* finish propagate phase */
         work = 0;
       }

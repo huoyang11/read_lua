@@ -736,3 +736,77 @@ const char *print_tokens(LexState *ls)
   
   return buf;
 }
+
+const char *print_listcolor(GCObject *item)
+{
+  static char buf[BUFFSIZE] = {0};
+  int len = 0;
+
+  if (isblack(item)) {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","color:black1");
+  } else if (iswhite(item)) {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","color:white");
+  } else if (isgray(item)) {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","color:gray");
+  } else {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","color:black2");
+  }
+
+  return buf;
+}
+
+const char *print_listtype(GCObject *item)
+{
+  static char buf[BUFFSIZE] = {0};
+  int len = 0;
+
+  len += snprintf(buf + len,BUFFSIZE - len,"%s","type:");
+  if (item->tt == LUA_VCCL) {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","CClosure");
+  } else if (item->tt == LUA_VLCF) {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","LClosure");
+  } else if (item->tt == LUA_VUPVAL) {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","UpVal");
+  } else if (item->tt == LUA_VPROTO) {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","Proto");
+  } else if (item->tt == LUA_VUSERDATA) {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","Udata");
+  } else if (item->tt == LUA_VTABLE) {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","Table");
+  } else if (item->tt == LUA_VTHREAD) {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","Thread");
+  }
+
+  return buf;
+}
+
+const char *print_lists(GCObject *list)
+{
+  static char buf[BUFFSIZE] = {0};
+  int len = 0;
+
+  for (GCObject *it = list;it;it = it->next) {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","{\n");
+
+    len += snprintf(buf + len,BUFFSIZE - len,"  %s\n",print_listcolor(it));
+    len += snprintf(buf + len,BUFFSIZE - len,"  %s\n",print_listtype(it));
+    len += snprintf(buf + len,BUFFSIZE - len,"  addr:%p\n",it);
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","}\n");
+  }
+
+  return buf;
+}
+
+const char *print_grays(lua_State *L)
+{
+  static char buf[BUFFSIZE] = {0};
+  int len = 0;
+
+  global_State *g = G(L);
+  GCObject *gray = g->gray;
+
+  len += snprintf(buf + len,BUFFSIZE - len,"%s\n","graylist");
+  len += snprintf(buf + len,BUFFSIZE - len,"%s",print_lists(gray));
+  
+  return buf;
+}

@@ -247,33 +247,33 @@ typedef struct CallInfo {
 ** 'global state', shared by all threads of this state
 */
 typedef struct global_State {
-  lua_Alloc frealloc;  //lua中内存分配的函数
+  lua_Alloc frealloc;   //lua中内存分配的函数
   void *ud;         /* auxiliary data to 'frealloc' */
   l_mem totalbytes;  /* number of bytes currently allocated - GCdebt */
-  l_mem GCdebt;  /* bytes allocated not yet compensated by the collector */
+  l_mem GCdebt;         //统计分配内存的数量
   lu_mem GCestimate;  /* an estimate of the non-garbage memory in use */
   lu_mem lastatomic;  /* see function 'genstep' in file 'lgc.c' */
-  stringtable strt;  //全局唯一的字符串hash表
+  stringtable strt;     //全局唯一的字符串hash表
   TValue l_registry;
   TValue nilvalue;  /* a nil value */
-  unsigned int seed;  //hash因子
-  lu_byte currentwhite;
-  lu_byte gcstate;  /* state of garbage collector */
+  unsigned int seed;    //hash因子
+  lu_byte currentwhite; //gc当前使用的白色
+  lu_byte gcstate;      //gc状态
   lu_byte gckind;  /* kind of GC running */
   lu_byte gcstopem;  /* stops emergency collections */
   lu_byte genminormul;  /* control for minor generational collections */
   lu_byte genmajormul;  /* control for major generational collections */
   lu_byte gcrunning;  /* true if GC is running */
   lu_byte gcemergency;  /* true if this is an emergency collection */
-  lu_byte gcpause;  /* size of pause between successive GCs */
-  lu_byte gcstepmul;  /* GC "speed" */
+  lu_byte gcpause;      //用于控制下一轮GC开始的时机
+  lu_byte gcstepmul;    //GC回收的速度
   lu_byte gcstepsize;  /* (log2 of) GC granularity */
-  GCObject *allgc;  /* list of all collectable objects */
+  GCObject *allgc;      //所有gc对象
   GCObject **sweepgc;  /* current position of sweep in list */
   GCObject *finobj;  /* list of collectable objects with finalizers */
-  GCObject *gray;  /* list of gray objects */
-  GCObject *grayagain;  /* list of objects to be traversed atomically */
-  GCObject *weak;  /* list of tables with weak values */
+  GCObject *gray;       //灰色节点的链表
+  GCObject *grayagain;  //原子灰色的节点链表 不可打断
+  GCObject *weak;       //存放弱表的链表
   GCObject *ephemeron;  /* list of ephemeron tables (weak keys) */
   GCObject *allweak;  /* list of all-weak tables */
   GCObject *tobefnz;  /* list of userdata to be GC */

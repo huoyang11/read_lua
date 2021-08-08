@@ -28,15 +28,15 @@
 /*
 ** Possible states of the Garbage Collector
 */
-#define GCSpropagate	0
+#define GCSpropagate	0		//传播阶段
 #define GCSenteratomic	1
 #define GCSatomic	2
 #define GCSswpallgc	3
 #define GCSswpfinobj	4
 #define GCSswptobefnz	5
-#define GCSswpend	6
-#define GCScallfin	7
-#define GCSpause	8
+#define GCSswpend	6			//回收阶段
+#define GCScallfin	7			//终止阶段
+#define GCSpause	8			//暂停阶段
 
 
 #define issweepphase(g)  \

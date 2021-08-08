@@ -60,3 +60,10 @@ if $argc != 1
 end
 printf "%s",print_tokens($arg0)
 end
+
+define plua_grays
+if $argc != 1
+    p "参数数目错误,{plua_grays lua_State *}"
+end
+printf "%s",print_grays($arg0)
+end
