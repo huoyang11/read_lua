@@ -813,16 +813,19 @@ const char *print_lists(GCObject *list)
   return buf;
 }
 
-const char *print_grays(lua_State *L)
+const char *print_nextlists(GCObject *list)
 {
   static char buf[BUFFSIZE] = {0};
   int len = 0;
 
-  global_State *g = G(L);
-  GCObject *gray = g->gray;
+  for (GCObject *it = list;it;it = it->next) {
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","{\n");
 
-  len += snprintf(buf + len,BUFFSIZE - len,"%s\n","graylist");
-  len += snprintf(buf + len,BUFFSIZE - len,"%s",print_lists(gray));
-  
+    len += snprintf(buf + len,BUFFSIZE - len,"  %s\n",print_listcolor(it));
+    len += snprintf(buf + len,BUFFSIZE - len,"  %s\n",print_listtype(it));
+    len += snprintf(buf + len,BUFFSIZE - len,"  addr:%p\n",it);
+    len += snprintf(buf + len,BUFFSIZE - len,"%s","}\n");
+  }
+
   return buf;
 }

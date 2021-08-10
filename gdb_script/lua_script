@@ -61,9 +61,51 @@ end
 printf "%s",print_tokens($arg0)
 end
 
+define plua_gclist
+if $argc != 1
+    p "参数数目错误,{plua_grays GCObject *}"
+end
+printf "%s",print_lists($arg0)
+end
+
+define plua_gcnextlist
+if $argc != 1
+    p "参数数目错误,{plua_grays GCObject *}"
+end
+printf "%s",print_nextlists($arg0)
+end
+
 define plua_grays
 if $argc != 1
-    p "参数数目错误,{plua_grays lua_State *}"
+    p "参数数目错误,{plua_grays global_State *}"
 end
-printf "%s",print_grays($arg0)
+printf "%s",print_lists($arg0->gray)
+end
+
+define plua_allgc
+if $argc != 1
+    p "参数数目错误,{plua_grays global_State *}"
+end
+printf "%s",print_nextlists($arg0->allgc)
+end
+
+define plua_grayagain
+if $argc != 1
+    p "参数数目错误,{plua_grays global_State *}"
+end
+printf "%s",print_lists($arg0->grayagain)
+end
+
+define plua_weak
+if $argc != 1
+    p "参数数目错误,{plua_grays global_State *}"
+end
+printf "%s",print_lists($arg0->weak)
+end
+
+define plua_allweak
+if $argc != 1
+    p "参数数目错误,{plua_grays global_State *}"
+end
+printf "%s",print_lists($arg0->allweak)
 end
