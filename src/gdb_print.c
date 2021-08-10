@@ -780,12 +780,28 @@ const char *print_listtype(GCObject *item)
   return buf;
 }
 
+static GCObject *getgclist (GCObject *o) {
+  switch (o->tt) {
+    case LUA_VTABLE: return gco2t(o)->gclist;
+    case LUA_VLCL: return gco2lcl(o)->gclist;
+    case LUA_VCCL: return gco2ccl(o)->gclist;
+    case LUA_VTHREAD: return gco2th(o)->gclist;
+    case LUA_VPROTO: return gco2p(o)->gclist;
+    case LUA_VUSERDATA: {
+      Udata *u = gco2u(o);
+      lua_assert(u->nuvalue > 0);
+      return u->gclist;
+    }
+    default: lua_assert(0); return 0;
+  }
+}
+
 const char *print_lists(GCObject *list)
 {
   static char buf[BUFFSIZE] = {0};
   int len = 0;
 
-  for (GCObject *it = list;it;it = it->next) {
+  for (GCObject *it = list;it;it = getgclist(it)) {
     len += snprintf(buf + len,BUFFSIZE - len,"%s","{\n");
 
     len += snprintf(buf + len,BUFFSIZE - len,"  %s\n",print_listcolor(it));
