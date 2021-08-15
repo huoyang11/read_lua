@@ -627,7 +627,7 @@ static int traversethread (global_State *g, lua_State *th) {
     return 1;  /* stack not completely built yet */
   lua_assert(g->gcstate == GCSatomic ||
              th->openupval == NULL || isintwups(th));
-  for (; o < th->top; o++)  /* mark live elements in the stack */
+  for (; o < th->top; o++)          //扫描栈中的元素
     markvalue(g, s2v(o));
   for (uv = th->openupval; uv != NULL; uv = uv->u.open.next)
     markobject(g, uv);  /* open upvalues cannot be collected */

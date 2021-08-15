@@ -233,10 +233,10 @@ static void f_luaopen (lua_State *L, void *ud) {
   UNUSED(ud);
   stack_init(L, L);  /* init stack */
   init_registry(L, g);
-  luaS_init(L);   //初始化全局字符串表
-  luaT_init(L);   //添加元方法字符串
-  luaX_init(L);   //添加关键字字符串
-  g->gcrunning = 1;  /* allow gc */
+  luaS_init(L);     //初始化全局字符串表
+  luaT_init(L);     //添加元方法字符串
+  luaX_init(L);     //添加关键字字符串
+  g->gcrunning = 1; //启动gc
   setnilvalue(&g->nilvalue);  /* now state is complete */
   luai_userstateopen(L);
 }

@@ -131,10 +131,10 @@ const char *print_table(lua_State *L,Table *t)
   StackValue tem[2] = {0};
   setnilvalue(s2v(tem));
   while(luaH_next(L,t,tem)) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s",print_value(L,s2v(tem)));
-    len += snprintf(buf + len,BUFFSIZE - len,"\t");
-    len += snprintf(buf + len,BUFFSIZE - len,"%s",print_value(L,s2v(tem + 1)));
-    len += snprintf(buf + len,BUFFSIZE - len,"\n");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",print_value(L,s2v(tem)));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"\t");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",print_value(L,s2v(tem + 1)));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"\n");
     if (len >= BUFFSIZE) return buf;
   }
 
@@ -158,45 +158,45 @@ const char *PrintString(const TString* ts)
  memset(buf,0,BUFFSIZE);
  const char* s=getstr(ts);
  size_t i,n=tsslen(ts);
- len += snprintf(buf + len,BUFFSIZE-len,"\"");
+ len += snprintf(buf + len,BUFFSIZE - len - 1,"\"");
  for (i=0; i<n; i++)
  {
   int c=(int)(unsigned char)s[i];
   switch (c)
   {
    case '"':
-    len += snprintf(buf + len,BUFFSIZE-len,"\\\"");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"\\\"");
     break;
    case '\\':
-    len += snprintf(buf + len,BUFFSIZE-len,"\\\\");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"\\\\");
     break;
    case '\a':
-    len += snprintf(buf + len,BUFFSIZE-len,"\\a");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"\\a");
     break;
    case '\b':
-    len += snprintf(buf + len,BUFFSIZE-len,"\\b");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"\\b");
     break;
    case '\f':
-    len += snprintf(buf + len,BUFFSIZE-len,"\\f");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"\\f");
     break;
    case '\n':
-    len += snprintf(buf + len,BUFFSIZE-len,"\\n");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"\\n");
     break;
    case '\r':
-    len += snprintf(buf + len,BUFFSIZE-len,"\\r");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"\\r");
     break;
    case '\t':
-    len += snprintf(buf + len,BUFFSIZE-len,"\\t");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"\\t");
     break;
    case '\v':
-    len += snprintf(buf + len,BUFFSIZE-len,"\\v");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"\\v");
     break;
    default:
-    if (isprint(c)) len += snprintf(buf + len,BUFFSIZE-len,"%c",c); else len += snprintf(buf + len,BUFFSIZE-len,"\\%03d",c);
+    if (isprint(c)) len += snprintf(buf + len,BUFFSIZE - len - 1,"%c",c); else len += snprintf(buf + len,BUFFSIZE - len - 1,"\\%03d",c);
     break;
   }
  }
- len += snprintf(buf + len,BUFFSIZE-len,"\"");
+ len += snprintf(buf + len,BUFFSIZE - len - 1,"\"");
 
  return buf;
 }
@@ -210,31 +210,31 @@ const char *PrintConstant(const Proto* f, int i)
  switch (ttypetag(o))
  {
   case LUA_VNIL:
-    len += snprintf(buf + len,BUFFSIZE-len,"nil");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"nil");
     break;
   case LUA_VFALSE:
-    len += snprintf(buf + len,BUFFSIZE-len,"false");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"false");
     break;
   case LUA_VTRUE:
-    len += snprintf(buf + len,BUFFSIZE-len,"true");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"true");
     break;
   case LUA_VNUMFLT:
     {
     char buff[100];
     sprintf(buff,LUA_NUMBER_FMT,fltvalue(o));
-    len += snprintf(buf + len,BUFFSIZE-len,"%s",buff);
-    if (buff[strspn(buff,"-0123456789")]=='\0') len += snprintf(buf + len,BUFFSIZE-len,".0");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",buff);
+    if (buff[strspn(buff,"-0123456789")]=='\0') len += snprintf(buf + len,BUFFSIZE - len - 1,".0");
     break;
     }
   case LUA_VNUMINT:
-    len += snprintf(buf + len,BUFFSIZE-len,LUA_INTEGER_FMT,ivalue(o));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,LUA_INTEGER_FMT,ivalue(o));
     break;
   case LUA_VSHRSTR:
   case LUA_VLNGSTR:
-    len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintString(tsvalue(o)));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintString(tsvalue(o)));
     break;
   default:				/* cannot happen */
-    len += snprintf(buf + len,BUFFSIZE-len,"?%d",ttypetag(o));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"?%d",ttypetag(o));
     break;
  }
 
@@ -264,315 +264,315 @@ const char *PrintCode(lua_State* L,const Proto* f,int n)
   int sbx=GETARG_sBx(i);
   int isk=GETARG_k(i);
   int line=luaG_getfuncline(f,pc);
-  len += snprintf(buf + len,BUFFSIZE-len,"\t%d\t",pc+1);
-  if (line>0) len += snprintf(buf + len,BUFFSIZE-len,"[%d]\t",line); else len += snprintf(buf + len,BUFFSIZE-len,"[-]\t");
-  len += snprintf(buf + len,BUFFSIZE-len,"%-9s\t",opnames[o]);
+  len += snprintf(buf + len,BUFFSIZE - len - 1,"\t%d\t",pc+1);
+  if (line>0) len += snprintf(buf + len,BUFFSIZE - len - 1,"[%d]\t",line); else len += snprintf(buf + len,BUFFSIZE - len - 1,"[-]\t");
+  len += snprintf(buf + len,BUFFSIZE - len - 1,"%-9s\t",opnames[o]);
   switch (o)
   {
    case OP_MOVE:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,b);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,b);
     break;
    case OP_LOADI:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,sbx);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,sbx);
     break;
    case OP_LOADF:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,sbx);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,sbx);
     break;
    case OP_LOADK:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,bx);
-    len += snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,bx));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,bx);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,bx));
     break;
    case OP_LOADKX:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d",a);
-    len += snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,EXTRAARG));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d",a);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,EXTRAARG));
     break;
    case OP_LOADFALSE:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d",a);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d",a);
     break;
    case OP_LFALSESKIP:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d",a);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d",a);
     break;
    case OP_LOADTRUE:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d",a);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d",a);
     break;
    case OP_LOADNIL:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,b);
-    len += snprintf(buf + len,BUFFSIZE-len,COMMENT "%d out",b+1);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,b);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "%d out",b+1);
     break;
    case OP_GETUPVAL:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,b);
-    len += snprintf(buf + len,BUFFSIZE-len,COMMENT "%s",UPVALNAME(b));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,b);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "%s",UPVALNAME(b));
     break;
    case OP_SETUPVAL:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,b);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "%s",UPVALNAME(b));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,b);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "%s",UPVALNAME(b));
     break;
    case OP_GETTABUP:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "%s",UPVALNAME(b));
-    len += snprintf(buf + len,BUFFSIZE-len," "); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "%s",UPVALNAME(b));
+    len += snprintf(buf + len,BUFFSIZE - len - 1," "); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c));
     break;
    case OP_GETTABLE:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_GETI:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_GETFIELD:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c));
     break;
    case OP_SETTABUP:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d%s",a,b,c,ISK);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "%s",UPVALNAME(a));
-    len += snprintf(buf + len,BUFFSIZE-len," "); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,b));
-    if (isk) { len += snprintf(buf + len,BUFFSIZE-len," "); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c)); }
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d%s",a,b,c,ISK);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "%s",UPVALNAME(a));
+    len += snprintf(buf + len,BUFFSIZE - len - 1," "); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,b));
+    if (isk) { len += snprintf(buf + len,BUFFSIZE - len - 1," "); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c)); }
     break;
    case OP_SETTABLE:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d%s",a,b,c,ISK);
-    if (isk) { len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c)); }
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d%s",a,b,c,ISK);
+    if (isk) { len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c)); }
     break;
    case OP_SETI:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d%s",a,b,c,ISK);
-    if (isk) { len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c)); }
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d%s",a,b,c,ISK);
+    if (isk) { len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c)); }
     break;
    case OP_SETFIELD:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d%s",a,b,c,ISK);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,b));
-    if (isk) { len += snprintf(buf + len,BUFFSIZE-len," "); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c)); }
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d%s",a,b,c,ISK);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,b));
+    if (isk) { len += snprintf(buf + len,BUFFSIZE - len - 1," "); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c)); }
     break;
    case OP_NEWTABLE:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "%d",c+EXTRAARGC);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "%d",c+EXTRAARGC);
     break;
    case OP_SELF:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d%s",a,b,c,ISK);
-    if (isk) { len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c)); }
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d%s",a,b,c,ISK);
+    if (isk) { len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c)); }
     break;
    case OP_ADDI:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,sc);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,sc);
     break;
    case OP_ADDK:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c));
     break;
    case OP_SUBK:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c));
     break;
    case OP_MULK:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c));
     break;
    case OP_MODK:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c));
     break;
    case OP_POWK:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c));
     break;
    case OP_DIVK:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c));
     break;
    case OP_IDIVK:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c));
     break;
    case OP_BANDK:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c));
     break;
    case OP_BORK:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c));
     break;
    case OP_BXORK:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,c));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,c));
     break;
    case OP_SHRI:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,sc);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,sc);
     break;
    case OP_SHLI:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,sc);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,sc);
     break;
    case OP_ADD:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_SUB:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_MUL:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_MOD:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_POW:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_DIV:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_IDIV:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_BAND:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_BOR:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_BXOR:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_SHL:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_SHR:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     break;
    case OP_MMBIN:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "%s",eventname(c));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "%s",eventname(c));
     break;
    case OP_MMBINI:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d %d",a,sb,c,isk);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "%s",eventname(c));
-    if (isk) len += snprintf(buf + len,BUFFSIZE-len," flip");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d %d",a,sb,c,isk);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "%s",eventname(c));
+    if (isk) len += snprintf(buf + len,BUFFSIZE - len - 1," flip");
     break;
    case OP_MMBINK:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d %d",a,b,c,isk);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "%s ",eventname(c)); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,b));
-    if (isk) len += snprintf(buf + len,BUFFSIZE-len," flip");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d %d",a,b,c,isk);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "%s ",eventname(c)); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,b));
+    if (isk) len += snprintf(buf + len,BUFFSIZE - len - 1," flip");
     break;
    case OP_UNM:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,b);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,b);
     break;
    case OP_BNOT:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,b);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,b);
     break;
    case OP_NOT:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,b);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,b);
     break;
    case OP_LEN:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,b);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,b);
     break;
    case OP_CONCAT:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,b);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,b);
     break;
    case OP_CLOSE:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d",a);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d",a);
     break;
    case OP_TBC:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d",a);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d",a);
     break;
    case OP_JMP:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d",GETARG_sJ(i));
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "to %d",GETARG_sJ(i)+pc+2);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d",GETARG_sJ(i));
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "to %d",GETARG_sJ(i)+pc+2);
     break;
    case OP_EQ:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,isk);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,isk);
     break;
    case OP_LT:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,isk);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,isk);
     break;
    case OP_LE:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,isk);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,isk);
     break;
    case OP_EQK:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,isk);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT); len += snprintf(buf + len,BUFFSIZE-len,"%s",PrintConstant(f,b));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,isk);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT); len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",PrintConstant(f,b));
     break;
    case OP_EQI:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,sb,isk);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,sb,isk);
     break;
    case OP_LTI:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,sb,isk);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,sb,isk);
     break;
    case OP_LEI:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,sb,isk);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,sb,isk);
     break;
    case OP_GTI:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,sb,isk);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,sb,isk);
     break;
    case OP_GEI:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,sb,isk);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,sb,isk);
     break;
    case OP_TEST:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,isk);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,isk);
     break;
    case OP_TESTSET:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,isk);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,isk);
     break;
    case OP_CALL:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT);
-    if (b==0) len += snprintf(buf + len,BUFFSIZE-len,"all in "); else len += snprintf(buf + len,BUFFSIZE-len,"%d in ",b-1);
-    if (c==0) len += snprintf(buf + len,BUFFSIZE-len,"all out"); else len += snprintf(buf + len,BUFFSIZE-len,"%d out",c-1);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT);
+    if (b==0) len += snprintf(buf + len,BUFFSIZE - len - 1,"all in "); else len += snprintf(buf + len,BUFFSIZE - len - 1,"%d in ",b-1);
+    if (c==0) len += snprintf(buf + len,BUFFSIZE - len - 1,"all out"); else len += snprintf(buf + len,BUFFSIZE - len - 1,"%d out",c-1);
     break;
    case OP_TAILCALL:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "%d in",b-1);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "%d in",b-1);
     break;
    case OP_RETURN:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT);
-    if (b==0) len += snprintf(buf + len,BUFFSIZE-len,"all out"); else len += snprintf(buf + len,BUFFSIZE-len,"%d out",b-1);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT);
+    if (b==0) len += snprintf(buf + len,BUFFSIZE - len - 1,"all out"); else len += snprintf(buf + len,BUFFSIZE - len - 1,"%d out",b-1);
     break;
    case OP_RETURN0:
     break;
    case OP_RETURN1:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d",a);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d",a);
     break;
    case OP_FORLOOP:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,bx);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "to %d",pc-bx+2);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,bx);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "to %d",pc-bx+2);
     break;
    case OP_FORPREP:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,bx);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "to %d",pc+bx+2);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,bx);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "to %d",pc+bx+2);
     break;
    case OP_TFORPREP:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,bx);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "to %d",pc+bx+2);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,bx);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "to %d",pc+bx+2);
     break;
    case OP_TFORCALL:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,c);
     break;
    case OP_TFORLOOP:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,bx);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "to %d",pc-bx+2);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,bx);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "to %d",pc-bx+2);
     break;
    case OP_SETLIST:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
-    if (isk) len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "%d",c+EXTRAARGC);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
+    if (isk) len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "%d",c+EXTRAARGC);
     break;
    case OP_CLOSURE:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,bx);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT "%p",VOID(f->p[bx]));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,bx);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT "%p",VOID(f->p[bx]));
     break;
    case OP_VARARG:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d",a,c);
-    len +=snprintf(buf + len,BUFFSIZE-len,COMMENT);
-    if (c==0) len += snprintf(buf + len,BUFFSIZE-len,"all out"); else len += snprintf(buf + len,BUFFSIZE-len,"%d out",c-1);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d",a,c);
+    len +=snprintf(buf + len,BUFFSIZE - len - 1,COMMENT);
+    if (c==0) len += snprintf(buf + len,BUFFSIZE - len - 1,"all out"); else len += snprintf(buf + len,BUFFSIZE - len - 1,"%d out",c-1);
     break;
    case OP_VARARGPREP:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d",a);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d",a);
     break;
    case OP_EXTRAARG:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d",ax);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d",ax);
     break;
 #if 0
    default:
-    len += snprintf(buf + len,BUFFSIZE-len,"%d %d %d",a,b,c);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%d %d %d",a,b,c);
     len +=snprintf(buf + len,BUFFSIZE-nCOMMENT "not handled");
     break;
 #endif
   }
-  len += snprintf(buf + len,BUFFSIZE-len,"\n");
+  len += snprintf(buf + len,BUFFSIZE - len - 1,"\n");
  }
 
  return buf;
@@ -706,7 +706,7 @@ const char *print_tokens(LexState *ls)
 
   luaX_next(&lexstate);
   while (lexstate.t.token != TK_EOS) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s ",print_token(lexstate.t.token));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s ",print_token(lexstate.t.token));
     if (numline != lexstate.linenumber) {
       int i = len - 2;
       nextline = lexstate.linenumber - numline;
@@ -716,7 +716,7 @@ const char *print_tokens(LexState *ls)
           char tem[LUA_MINBUFFER] = {0};
           memcpy(tem,buf + i + 2,LUA_MINBUFFER);
           len = i + 2;
-          len += snprintf(buf + len,BUFFSIZE - len,"      %s%s%s%s","<-----------    ",print_token(ls->t.token),"\n",tem);
+          len += snprintf(buf + len,BUFFSIZE - len - 1,"      %s%s%s%s","<-----------    ",print_token(ls->t.token),"\n",tem);
         } else {
           *(buf + i + 1) = '\n';
         }
@@ -726,7 +726,7 @@ const char *print_tokens(LexState *ls)
     }
     luaX_next(&lexstate);
   }
-  len += snprintf(buf + len,BUFFSIZE - len,"%s","\n");
+  len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","\n");
 
   L->top--;
   //luaH_free(L,lexstate.h);  //加入gc不需要自己释放(坑了我一个多小时，大坑大坑)
@@ -740,16 +740,17 @@ const char *print_tokens(LexState *ls)
 const char *print_listcolor(GCObject *item)
 {
   static char buf[BUFFSIZE] = {0};
+  memset(buf,0,BUFFSIZE);
   int len = 0;
 
   if (isblack(item)) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","color:black1");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","color:black1");
   } else if (iswhite(item)) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","color:white");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","color:white");
   } else if (isgray(item)) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","color:gray");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","color:gray");
   } else {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","color:black2");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","color:black2");
   }
 
   return buf;
@@ -758,23 +759,28 @@ const char *print_listcolor(GCObject *item)
 const char *print_listtype(GCObject *item)
 {
   static char buf[BUFFSIZE] = {0};
+  memset(buf,0,BUFFSIZE);
   int len = 0;
 
-  len += snprintf(buf + len,BUFFSIZE - len,"%s","type:");
+  len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","type:");
   if (item->tt == LUA_VCCL) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","CClosure");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","CClosure");
   } else if (item->tt == LUA_VLCF) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","LClosure");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","LClosure");
   } else if (item->tt == LUA_VUPVAL) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","UpVal");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","UpVal");
   } else if (item->tt == LUA_VPROTO) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","Proto");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","Proto");
   } else if (item->tt == LUA_VUSERDATA) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","Udata");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","Udata");
   } else if (item->tt == LUA_VTABLE) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","Table");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","Table");
   } else if (item->tt == LUA_VTHREAD) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","Thread");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","Thread");
+  } else if (item->tt == LUA_VSHRSTR) {
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","shrstr");
+  } else if (item->tt == LUA_VLNGSTR) {
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","lngstr");
   }
 
   return buf;
@@ -799,15 +805,16 @@ static GCObject *getgclist (GCObject *o) {
 const char *print_lists(GCObject *list)
 {
   static char buf[BUFFSIZE] = {0};
+  memset(buf,0,BUFFSIZE);
   int len = 0;
 
   for (GCObject *it = list;it;it = getgclist(it)) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","{\n");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","{\n");
 
-    len += snprintf(buf + len,BUFFSIZE - len,"  %s\n",print_listcolor(it));
-    len += snprintf(buf + len,BUFFSIZE - len,"  %s\n",print_listtype(it));
-    len += snprintf(buf + len,BUFFSIZE - len,"  addr:%p\n",it);
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","}\n");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"  %s\n",print_listcolor(it));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"  %s\n",print_listtype(it));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"  addr:%p\n",it);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","}\n");
   }
 
   return buf;
@@ -816,15 +823,17 @@ const char *print_lists(GCObject *list)
 const char *print_nextlists(GCObject *list)
 {
   static char buf[BUFFSIZE] = {0};
+  memset(buf,0,BUFFSIZE);
   int len = 0;
 
   for (GCObject *it = list;it;it = it->next) {
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","{\n");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","{\n");
 
-    len += snprintf(buf + len,BUFFSIZE - len,"  %s\n",print_listcolor(it));
-    len += snprintf(buf + len,BUFFSIZE - len,"  %s\n",print_listtype(it));
-    len += snprintf(buf + len,BUFFSIZE - len,"  addr:%p\n",it);
-    len += snprintf(buf + len,BUFFSIZE - len,"%s","}\n");
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"  %s\n",print_listcolor(it));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"  %s\n",print_listtype(it));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"  addr:%p\n",it);
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","}\n");
+    if (len >= BUFFSIZE) break;
   }
 
   return buf;
