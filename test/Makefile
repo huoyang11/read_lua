@@ -19,11 +19,12 @@ CFLAGS=-g2 -gdwarf-2
 LIBPATH=-L./lib
 LIBS=-l:liblua.a -lm -ldl
 INCLUDE=-I./include
+TOOLSRC=tool/gdb_print.c
 
 all:$(TARGET) $(LIBTARGET) $(LIBTARGETP)
 
 $(TARGET):%:src/%.c
-	$(CC) $(CFLAGS) -o bin/$@ $^ $(INCLUDE) $(LIBPATH) $(LIBS)
+	$(CC) $(CFLAGS) -o bin/$@ $^ $(TOOLSRC) $(INCLUDE) $(LIBPATH) $(LIBS)
 
 $(LIBTARGET):%.so:libsrc/%.c
 	$(CC) $(CFLAGS) -shared -o lib/$@ $^ $(INCLUDE) $(LIBPATH) -llua

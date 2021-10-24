@@ -309,14 +309,14 @@ LUALIB_API int luaL_execresult (lua_State *L, int stat) {
 */
 
 LUALIB_API int luaL_newmetatable (lua_State *L, const char *tname) {
-  if (luaL_getmetatable(L, tname) != LUA_TNIL)  /* name already in use? */
+  if (luaL_getmetatable(L, tname) != LUA_TNIL)  //检查名称是否被使用
     return 0;  /* leave previous value on top, but return 0 */
-  lua_pop(L, 1);
-  lua_createtable(L, 0, 2);  /* create metatable */
+  lua_pop(L, 1);                                //弹出栈中的nil值
+  lua_createtable(L, 0, 2);                     //创建table
   lua_pushstring(L, tname);
-  lua_setfield(L, -2, "__name");  /* metatable.__name = tname */
+  lua_setfield(L, -2, "__name");                //metatable[__name] = tname
   lua_pushvalue(L, -1);
-  lua_setfield(L, LUA_REGISTRYINDEX, tname);  /* registry.name = metatable */
+  lua_setfield(L, LUA_REGISTRYINDEX, tname);    //registry.name = tname  
   return 1;
 }
 

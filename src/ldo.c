@@ -409,15 +409,15 @@ static void moveresults (lua_State *L, StkId res, int nres, int wanted) {
   StkId firstresult;
   int i;
   switch (wanted) {  /* handle typical cases separately */
-    case 0:  /* no values needed */
+    case 0:             //没有返回值
       L->top = res;
       return;
-    case 1:  /* one value needed */
-      if (nres == 0)   /* no results? */
-        setnilvalue(s2v(res));  /* adjust with nil */
-      else  /* at least one result */
+    case 1:             //一个返回值
+      if (nres == 0)    //如果实际没有返回,返回nil
+        setnilvalue(s2v(res));
+      else              //将返回值拷贝
         setobjs2s(L, res, L->top - nres);  //拷贝
-      L->top = res + 1;
+      L->top = res + 1; //重新设置栈(返回值的上方)
       return;
     case LUA_MULTRET:
       wanted = nres;  /* we want all results */
@@ -440,13 +440,13 @@ static void moveresults (lua_State *L, StkId res, int nres, int wanted) {
   }
   /* generic case */
   firstresult = L->top - nres;  //返回值起始的栈位置
-  if (nres > wanted)  /* extra results? */
+  if (nres > wanted)            //如果实际返回值个数大于预定义的个数
     nres = wanted;  /* don't need them */
-  for (i = 0; i < nres; i++)    //拷贝
+  for (i = 0; i < nres; i++)    //整体栈拷贝
     setobjs2s(L, res + i, firstresult + i);
-  for (; i < wanted; i++)  //清空原来位置的值
+  for (; i < wanted; i++)       //如果实际返回值个数小于预定义的个数,多余的设置为nil
     setnilvalue(s2v(res + i));
-  L->top = res + wanted;  /* top points after the last result */
+  L->top = res + wanted;        //重新设置栈(返回值的上方)
 }
 
 
@@ -518,24 +518,24 @@ CallInfo *luaD_precall (lua_State *L, StkId func, int nresults) {
       int n;  /* number of returns */
       CallInfo *ci;
       checkstackGCp(L, LUA_MINSTACK, func);  /* ensure minimum stack size */
-      L->ci = ci = next_ci(L);   //如果cl->next为空，会申请内存并且加入双向链表
-      ci->nresults = nresults;   //返回值数量
+      L->ci = ci = next_ci(L);                 //如果cl->next为空，会申请内存并且加入双向链表
+      ci->nresults = nresults;                 //返回值数量
       ci->callstatus = CIST_C;
-      ci->top = L->top + LUA_MINSTACK;  //栈顶
-      ci->func = func;                  //栈基地址
+      ci->top = L->top + LUA_MINSTACK;         //栈顶
+      ci->func = func;                         //栈基地址
       lua_assert(ci->top <= L->stack_last);
       if (l_unlikely(L->hookmask & LUA_MASKCALL)) {
         int narg = cast_int(L->top - func) - 1;
         luaD_hook(L, LUA_HOOKCALL, -1, 1, narg);
       }
       lua_unlock(L);
-      n = (*f)(L);  //调用lua c函数  返回的是返回值的个数
+      n = (*f)(L);                             //调用lua c函数  返回的是返回值的个数
       lua_lock(L);
       api_checknelems(L, n);
-      luaD_poscall(L, ci, n); //返回值移动
+      luaD_poscall(L, ci, n);                  //返回值移动
       return NULL;
     }
-    case LUA_VLCL: {  //lua 函数
+    case LUA_VLCL: {                           //lua 函数
       CallInfo *ci;
       Proto *p = clLvalue(s2v(func))->p;       //函数信息结构体 (指令、常量、子函数等)
       int narg = cast_int(L->top - func) - 1;  //传入的参数个数 (-1是因为包含自身)

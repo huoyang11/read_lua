@@ -165,11 +165,11 @@ LUA_API lua_Number (lua_version) (lua_State *L);
 ** basic stack manipulation
 */
 LUA_API int   (lua_absindex) (lua_State *L, int idx);
-LUA_API int   (lua_gettop) (lua_State *L);
-LUA_API void  (lua_settop) (lua_State *L, int idx);
-LUA_API void  (lua_pushvalue) (lua_State *L, int idx);
+LUA_API int   (lua_gettop) (lua_State *L);                          //获取栈大小
+LUA_API void  (lua_settop) (lua_State *L, int idx);                 //设置栈大小(idx是栈的索引)
+LUA_API void  (lua_pushvalue) (lua_State *L, int idx);              //压栈(idx是栈的索引)
 LUA_API void  (lua_rotate) (lua_State *L, int idx, int n);
-LUA_API void  (lua_copy) (lua_State *L, int fromidx, int toidx);
+LUA_API void  (lua_copy) (lua_State *L, int fromidx, int toidx);    //拷贝(从索引fromidx到索引toidx)
 LUA_API int   (lua_checkstack) (lua_State *L, int n);
 
 LUA_API void  (lua_xmove) (lua_State *from, lua_State *to, int n);
@@ -184,14 +184,14 @@ LUA_API int             (lua_isstring) (lua_State *L, int idx);
 LUA_API int             (lua_iscfunction) (lua_State *L, int idx);
 LUA_API int             (lua_isinteger) (lua_State *L, int idx);
 LUA_API int             (lua_isuserdata) (lua_State *L, int idx);
-LUA_API int             (lua_type) (lua_State *L, int idx);
-LUA_API const char     *(lua_typename) (lua_State *L, int tp);
+LUA_API int             (lua_type) (lua_State *L, int idx);         //返回类型
+LUA_API const char     *(lua_typename) (lua_State *L, int tp);      //返回类型名
 
 LUA_API lua_Number      (lua_tonumberx) (lua_State *L, int idx, int *isnum);
 LUA_API lua_Integer     (lua_tointegerx) (lua_State *L, int idx, int *isnum);
 LUA_API int             (lua_toboolean) (lua_State *L, int idx);
 LUA_API const char     *(lua_tolstring) (lua_State *L, int idx, size_t *len);
-LUA_API lua_Unsigned    (lua_rawlen) (lua_State *L, int idx);
+LUA_API lua_Unsigned    (lua_rawlen) (lua_State *L, int idx);       //取长度 #
 LUA_API lua_CFunction   (lua_tocfunction) (lua_State *L, int idx);
 LUA_API void	       *(lua_touserdata) (lua_State *L, int idx);
 LUA_API lua_State      *(lua_tothread) (lua_State *L, int idx);
@@ -247,7 +247,7 @@ LUA_API int   (lua_pushthread) (lua_State *L);
 /*
 ** get functions (Lua -> stack)
 */
-LUA_API int (lua_getglobal) (lua_State *L, const char *name);
+LUA_API int (lua_getglobal) (lua_State *L, const char *name);                     //获取全局信息表,返回在栈中,函数返回值为该数据的类型
 LUA_API int (lua_gettable) (lua_State *L, int idx);
 LUA_API int (lua_getfield) (lua_State *L, int idx, const char *k);
 LUA_API int (lua_geti) (lua_State *L, int idx, lua_Integer n);
@@ -264,7 +264,7 @@ LUA_API int  (lua_getiuservalue) (lua_State *L, int idx, int n);
 /*
 ** set functions (stack -> Lua)
 */
-LUA_API void  (lua_setglobal) (lua_State *L, const char *name);
+LUA_API void  (lua_setglobal) (lua_State *L, const char *name);                   //设置全局信息表
 LUA_API void  (lua_settable) (lua_State *L, int idx);
 LUA_API void  (lua_setfield) (lua_State *L, int idx, const char *k);
 LUA_API void  (lua_seti) (lua_State *L, int idx, lua_Integer n);

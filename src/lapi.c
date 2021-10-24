@@ -52,26 +52,32 @@ const char lua_ident[] =
 /* test for upvalue */
 #define isupvalue(i)		((i) < LUA_REGISTRYINDEX)
 
-
+//idx 索引函数
+/*
+idx > 0:栈的正常索引
+LUA_REGISTRYINDEX< idx <= 0:栈的正常索引
+idx = LUA_REGISTRYINDEX: G(L)->l_registry
+idx < LUA_REGISTRYINDEX:访问的是当前函数的upval表
+*/
 static TValue *index2value (lua_State *L, int idx) {
   CallInfo *ci = L->ci;
-  if (idx > 0) {
-    StkId o = ci->func + idx;
+  if (idx > 0) {                                //正常的正数索引
+    StkId o = ci->func + idx;                   //取值
     api_check(L, idx <= L->ci->top - (ci->func + 1), "unacceptable index");
-    if (o >= L->top) return &G(L)->nilvalue;
-    else return s2v(o);
+    if (o >= L->top) return &G(L)->nilvalue;    //如果这个值的地址大于当前栈顶,直接返回空值
+    else return s2v(o);                         //把值转为TValue
   }
-  else if (!ispseudo(idx)) {  /* negative index */
+  else if (!ispseudo(idx)) {                    //LUA_REGISTRYINDEX< idx <= 0 ,正常的负数索引
     api_check(L, idx != 0 && -idx <= L->top - (ci->func + 1), "invalid index");
     return s2v(L->top + idx);
   }
-  else if (idx == LUA_REGISTRYINDEX)
+  else if (idx == LUA_REGISTRYINDEX)            //idx = LUA_REGISTRYINDEX
     return &G(L)->l_registry;
-  else {  /* upvalues */
-    idx = LUA_REGISTRYINDEX - idx;
+  else {                                        //idx < LUA_REGISTRYINDEX
+    idx = LUA_REGISTRYINDEX - idx;              //>1
     api_check(L, idx <= MAXUPVAL + 1, "upvalue index too large");
-    if (ttislcf(s2v(ci->func)))  /* light C function? */
-      return &G(L)->nilvalue;  /* it has no upvalues */
+    if (ttislcf(s2v(ci->func)))                 //如果当前函数是c函数,返回空
+      return &G(L)->nilvalue;                   //返回idx-1的upval表
     else {
       CClosure *func = clCvalue(s2v(ci->func));
       return (idx <= func->nupvalues) ? &func->upvalue[idx-1]
@@ -167,7 +173,7 @@ LUA_API int lua_absindex (lua_State *L, int idx) {
 
 
 LUA_API int lua_gettop (lua_State *L) {
-  return cast_int(L->top - (L->ci->func + 1));
+  return cast_int(L->top - (L->ci->func + 1));      //当前栈顶 - 当前函数基地址
 }
 
 
@@ -180,21 +186,21 @@ LUA_API void lua_settop (lua_State *L, int idx) {
   func = ci->func;
   if (idx >= 0) {
     api_check(L, idx <= ci->top - (func + 1), "new top too large");
-    diff = ((func + 1) + idx) - L->top;
+    diff = ((func + 1) + idx) - L->top;             //计算相对位置
     for (; diff > 0; diff--)
-      setnilvalue(s2v(L->top++));  /* clear new slots */
+      setnilvalue(s2v(L->top++));                   //如果大于当前栈顶,把多余值置空
   }
   else {
     api_check(L, -(idx+1) <= (L->top - (func + 1)), "invalid new top");
-    diff = idx + 1;  /* will "subtract" index (as it is negative) */
+    diff = idx + 1;                                 //计算相对位置,-1是栈顶
   }
   api_check(L, L->tbclist < L->top, "previous pop of an unclosed slot");
-  newtop = L->top + diff;
-  if (diff < 0 && L->tbclist >= newtop) {
+  newtop = L->top + diff;                           //计算新的栈顶位置
+  if (diff < 0 && L->tbclist >= newtop) {           //栈基址大于新的栈顶位置
     lua_assert(hastocloseCfunc(ci->nresults));
     luaF_close(L, newtop, CLOSEKTOP, 0);
   }
-  L->top = newtop;  /* correct top only after closing any upvalue */
+  L->top = newtop;                                  //设置新的栈顶位置
   lua_unlock(L);
 }
 
@@ -263,8 +269,8 @@ LUA_API void lua_copy (lua_State *L, int fromidx, int toidx) {
 
 LUA_API void lua_pushvalue (lua_State *L, int idx) {
   lua_lock(L);
-  setobj2s(L, L->top, index2value(L, idx));
-  api_incr_top(L);
+  setobj2s(L, L->top, index2value(L, idx));   //获取idx索引的值，写入当前栈顶
+  api_incr_top(L);                            //抬栈
   lua_unlock(L);
 }
 
@@ -320,9 +326,9 @@ LUA_API int lua_isuserdata (lua_State *L, int idx) {
 
 
 LUA_API int lua_rawequal (lua_State *L, int index1, int index2) {
-  const TValue *o1 = index2value(L, index1);
-  const TValue *o2 = index2value(L, index2);
-  return (isvalid(L, o1) && isvalid(L, o2)) ? luaV_rawequalobj(o1, o2) : 0;
+  const TValue *o1 = index2value(L, index1);    //取值
+  const TValue *o2 = index2value(L, index2);    //取值
+  return (isvalid(L, o1) && isvalid(L, o2)) ? luaV_rawequalobj(o1, o2) : 0; //如果都不为空,则开始比较
 }
 
 
@@ -633,17 +639,17 @@ LUA_API int lua_pushthread (lua_State *L) {
 static int auxgetstr (lua_State *L, const TValue *t, const char *k) {
   const TValue *slot;
   TString *str = luaS_new(L, k);
-  if (luaV_fastget(L, t, str, slot, luaH_getstr)) {
-    setobj2s(L, L->top, slot);
+  if (luaV_fastget(L, t, str, slot, luaH_getstr)) {           //获取key为k的值,输出到slot
+    setobj2s(L, L->top, slot);                                //如果slot不为空,把值压入栈中
     api_incr_top(L);
   }
   else {
-    setsvalue2s(L, L->top, str);
+    setsvalue2s(L, L->top, str);                              //把key压入栈中
     api_incr_top(L);
     luaV_finishget(L, t, s2v(L->top - 1), L->top - 1, slot);
   }
   lua_unlock(L);
-  return ttype(s2v(L->top - 1));
+  return ttype(s2v(L->top - 1));                              //返回压入值的类型
 }
 
 
