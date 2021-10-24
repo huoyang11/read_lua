@@ -56,14 +56,14 @@ static l_noret lexerror (LexState *ls, const char *msg, int token);
 
 static void save (LexState *ls, int c) {
   Mbuffer *b = ls->buff;
-  if (luaZ_bufflen(b) + 1 > luaZ_sizebuffer(b)) {
+  if (luaZ_bufflen(b) + 1 > luaZ_sizebuffer(b)) {   //buff内存不足,两倍扩容
     size_t newsize;
     if (luaZ_sizebuffer(b) >= MAX_SIZE/2)
       lexerror(ls, "lexical element too long", 0);
     newsize = luaZ_sizebuffer(b) * 2;
     luaZ_resizebuffer(ls->L, b, newsize);
   }
-  b->buffer[luaZ_bufflen(b)++] = cast_char(c);
+  b->buffer[luaZ_bufflen(b)++] = cast_char(c);      //写入一个字符
 }
 
 
@@ -446,37 +446,37 @@ static int llex (LexState *ls, SemInfo *seminfo) {
   luaZ_resetbuffer(ls->buff);
   for (;;) {
     switch (ls->current) {
-      case '\n': case '\r': {  /* line breaks */
+      case '\n': case '\r': {  //换行
         inclinenumber(ls);
         break;
       }
-      case ' ': case '\f': case '\t': case '\v': {  /* spaces */
+      case ' ': case '\f': case '\t': case '\v': {  //空格
         next(ls);
         break;
       }
-      case '-': {  /* '-' or '--' (comment) */
+      case '-': {  //可能是负数,可能是注释
         next(ls);
         if (ls->current != '-') return '-';
         /* else is a comment */
         next(ls);
-        if (ls->current == '[') {  /* long comment? */
+        if (ls->current == '[') {  //多行注释
           size_t sep = skip_sep(ls);
           luaZ_resetbuffer(ls->buff);  /* 'skip_sep' may dirty the buffer */
           if (sep >= 2) {
-            read_long_string(ls, NULL, sep);  /* skip long comment */
+            read_long_string(ls, NULL, sep);      //读到没注释的地方
             luaZ_resetbuffer(ls->buff);  /* previous call may dirty the buff. */
             break;
           }
         }
         /* else short comment */
-        while (!currIsNewline(ls) && ls->current != EOZ)
+        while (!currIsNewline(ls) && ls->current != EOZ)  //单行注释,跳出这一行
           next(ls);  /* skip until end of line (or end of file) */
         break;
       }
       case '[': {  /* long string or simply '[' */
         size_t sep = skip_sep(ls);
         if (sep >= 2) {
-          read_long_string(ls, seminfo, sep);
+          read_long_string(ls, seminfo, sep);   //读到']'之后,把字符串保存到seminfo->ts
           return TK_STRING;
         }
         else if (sep == 0)  /* '[=...' missing second bracket? */
@@ -515,8 +515,8 @@ static int llex (LexState *ls, SemInfo *seminfo) {
         if (check_next1(ls, ':')) return TK_DBCOLON;  /* '::' */
         else return ':';
       }
-      case '"': case '\'': {  /* short literal strings */
-        read_string(ls, ls->current, seminfo);
+      case '"': case '\'': {  //字符串
+        read_string(ls, ls->current, seminfo);  //读取字符串,保存在seminfo->ts
         return TK_STRING;
       }
       case '.': {  /* '.', '..', '...', or number */
@@ -533,11 +533,11 @@ static int llex (LexState *ls, SemInfo *seminfo) {
       case '5': case '6': case '7': case '8': case '9': {
         return read_numeral(ls, seminfo);
       }
-      case EOZ: {
+      case EOZ: {       //结束
         return TK_EOS;
       }
       default: {
-        if (lislalpha(ls->current)) {  /* identifier or reserved word? */
+        if (lislalpha(ls->current)) {  //标识符判断
           TString *ts;
           do {
             save_and_next(ls);
@@ -545,10 +545,10 @@ static int llex (LexState *ls, SemInfo *seminfo) {
           ts = luaX_newstring(ls, luaZ_buffer(ls->buff),
                                   luaZ_bufflen(ls->buff));
           seminfo->ts = ts;
-          if (isreserved(ts))  /* reserved word? */
+          if (isreserved(ts))  //关键字
             return ts->extra - 1 + FIRST_RESERVED;
           else {
-            return TK_NAME;
+            return TK_NAME;    //标识符
           }
         }
         else {  /* single-char tokens ('+', '*', '%', '{', '}', ...) */

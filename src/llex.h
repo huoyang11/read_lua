@@ -54,26 +54,26 @@ typedef union {
 
 
 typedef struct Token {
-  int token;
-  SemInfo seminfo;
+  int token;            //enum token
+  SemInfo seminfo;      //解析是用于缓存字面量
 } Token;
 
 
 /* state of the lexer plus state of the parser when shared by all
    functions */
 typedef struct LexState {
-  int current;  /* current character (charint) */
-  int linenumber;  /* input line counter */
+  int current;          //当前解析的字符(这个值是zio的zget获取的字符)
+  int linenumber;       //当前解析的行号
   int lastline;  /* line of last token 'consumed' */
-  Token t;  /* current token */
+  Token t;              //当前的token
   Token lookahead;  /* look ahead token */
-  struct FuncState *fs;  /* current function (parser) */
-  struct lua_State *L;
-  ZIO *z;  /* input stream */
-  Mbuffer *buff;  /* buffer for tokens */
-  Table *h;  /* to avoid collection/reuse strings */
+  struct FuncState *fs; //当前解析的函数对象
+  struct lua_State *L;  //lua状态机
+  ZIO *z;               //zio 用于读取文件
+  Mbuffer *buff;        //缓存区 常用于保存字符串
+  Table *h;             //缓存字符串区的表 (字符串做key,val是f->k数组的下标)
   struct Dyndata *dyd;  /* dynamic structures used by the parser */
-  TString *source;  /* current source name */
+  TString *source;      //当前解析lua文件的路径
   TString *envn;  /* environment variable name */
 } LexState;
 

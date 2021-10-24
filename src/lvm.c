@@ -289,28 +289,28 @@ void luaV_finishget (lua_State *L, const TValue *t, TValue *key, StkId val,
   int loop;  /* counter to avoid infinite loops */
   const TValue *tm;  /* metamethod */
   for (loop = 0; loop < MAXTAGLOOP; loop++) {
-    if (slot == NULL) {  /* 't' is not a table? */
+    if (slot == NULL) {                                   //t 不是table
       lua_assert(!ttistable(t));
       tm = luaT_gettmbyobj(L, t, TM_INDEX);
       if (l_unlikely(notm(tm)))
         luaG_typeerror(L, t, "index");  /* no metamethod */
       /* else will try the metamethod */
     }
-    else {  /* 't' is a table */
+    else {                                                //t 是table
       lua_assert(isempty(slot));
-      tm = fasttm(L, hvalue(t)->metatable, TM_INDEX);  /* table's metamethod */
-      if (tm == NULL) {  /* no metamethod? */
-        setnilvalue(s2v(val));  /* result is nil */
+      tm = fasttm(L, hvalue(t)->metatable, TM_INDEX);     //获取index元表
+      if (tm == NULL) {                                   //没有对应的元表
+        setnilvalue(s2v(val));                            //返回nil
         return;
       }
       /* else will try the metamethod */
     }
-    if (ttisfunction(tm)) {  /* is metamethod a function? */
-      luaT_callTMres(L, tm, t, key, val);  /* call it */
+    if (ttisfunction(tm)) {                               //如果元表是函数
+      luaT_callTMres(L, tm, t, key, val);                 //执行函数
       return;
     }
     t = tm;  /* else try to access 'tm[key]' */
-    if (luaV_fastget(L, t, key, slot, luaH_get)) {  /* fast track? */
+    if (luaV_fastget(L, t, key, slot, luaH_get)) {        //在元表中获取key对应的val
       setobj2s(L, val, slot);  /* done */
       return;
     }
@@ -332,30 +332,30 @@ void luaV_finishset (lua_State *L, const TValue *t, TValue *key,
   int loop;  /* counter to avoid infinite loops */
   for (loop = 0; loop < MAXTAGLOOP; loop++) {
     const TValue *tm;  /* '__newindex' metamethod */
-    if (slot != NULL) {  /* is 't' a table? */
+    if (slot != NULL) {                           //t 是table
       Table *h = hvalue(t);  /* save 't' table */
       lua_assert(isempty(slot));  /* slot must be empty */
-      tm = fasttm(L, h->metatable, TM_NEWINDEX);  /* get metamethod */
-      if (tm == NULL) {  /* no metamethod? */
-        luaH_finishset(L, h, key, slot, val);  /* set new value */
+      tm = fasttm(L, h->metatable, TM_NEWINDEX);  //获取index元表
+      if (tm == NULL) {                           //没有index元表
+        luaH_finishset(L, h, key, slot, val);     //t[key] = val
         invalidateTMcache(h);
         luaC_barrierback(L, obj2gco(h), val);
         return;
       }
       /* else will try the metamethod */
     }
-    else {  /* not a table; check metamethod */
-      tm = luaT_gettmbyobj(L, t, TM_NEWINDEX);
+    else {                                        //t 不是table
+      tm = luaT_gettmbyobj(L, t, TM_NEWINDEX);    //获取index元表
       if (l_unlikely(notm(tm)))
         luaG_typeerror(L, t, "index");
     }
     /* try the metamethod */
-    if (ttisfunction(tm)) {
+    if (ttisfunction(tm)) {                       //如果是函数,直接执行
       luaT_callTM(L, tm, t, key, val);
       return;
     }
     t = tm;  /* else repeat assignment over 'tm' */
-    if (luaV_fastget(L, t, key, slot, luaH_get)) {
+    if (luaV_fastget(L, t, key, slot, luaH_get)) {//t->tm.index[key] = val
       luaV_finishfastset(L, t, slot, val);
       return;  /* done */
     }
@@ -564,20 +564,17 @@ int luaV_lessequal (lua_State *L, const TValue *l, const TValue *r) {
 */
 int luaV_equalobj (lua_State *L, const TValue *t1, const TValue *t2) {
   const TValue *tm;
-  if (ttypetag(t1) != ttypetag(t2)) {  /* not the same variant? */
-    if (ttype(t1) != ttype(t2) || ttype(t1) != LUA_TNUMBER)
+  if (ttypetag(t1) != ttypetag(t2)) {                           //判断两个值的类型
+    if (ttype(t1) != ttype(t2) || ttype(t1) != LUA_TNUMBER)     //判断两个值具体类型(int double)
       return 0;  /* only numbers can be equal with different variants */
-    else {  /* two numbers with different variants */
-      /* One of them is an integer. If the other does not have an
-         integer value, they cannot be equal; otherwise, compare their
-         integer values. */
+      else {                                                    //两个值一个是int,一个是double,转成int比较
       lua_Integer i1, i2;
       return (luaV_tointegerns(t1, &i1, F2Ieq) &&
               luaV_tointegerns(t2, &i2, F2Ieq) &&
               i1 == i2);
     }
   }
-  /* values have same type and same variant */
+  //其他类型的比较
   switch (ttypetag(t1)) {
     case LUA_VNIL: case LUA_VFALSE: case LUA_VTRUE: return 1;
     case LUA_VNUMINT: return (ivalue(t1) == ivalue(t2));

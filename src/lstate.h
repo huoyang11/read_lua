@@ -170,12 +170,12 @@ typedef struct stringtable { //字符串hash表
 ** before the function starts or after it ends.
 */
 typedef struct CallInfo {
-  StkId func;  /* function index in the stack */
-  StkId	top;  /* top for this function */
-  struct CallInfo *previous, *next;  /* dynamic call link */
+  StkId func;                       //函数栈基地址
+  StkId	top;                        //栈顶
+  struct CallInfo *previous, *next; //双向链表指针
   union {
     struct {  /* only for Lua functions */
-      const Instruction *savedpc;
+      const Instruction *savedpc;   //pc寄存器的起始指令
       volatile l_signalT trap;
       int nextraargs;  /* # of extra arguments in vararg functions */
     } l;
@@ -194,8 +194,8 @@ typedef struct CallInfo {
       unsigned short ntransfer;  /* number of values transferred */
     } transferinfo;
   } u2;
-  short nresults;   //返回值个数
-  unsigned short callstatus; //函数调用的状态
+  short nresults;               //返回值个数
+  unsigned short callstatus;    //函数调用的状态
 } CallInfo;
 
 

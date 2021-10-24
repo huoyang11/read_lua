@@ -1,4 +1,5 @@
-a = 20
-b = 30
-local c = 2 * b
-local d = c * 2
+package.path = "/home/yh/public/read_lua/test/lua/?.lua;"
+local req = require "req"
+
+print(req.a)
+print(req.b)
