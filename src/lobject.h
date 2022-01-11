@@ -1,4 +1,4 @@
-/*
+﻿/*
 ** $Id: lobject.h $
 ** Type definitions for Lua objects
 ** See Copyright Notice in lua.h
@@ -686,11 +686,11 @@ typedef union Closure {
 typedef union Node {
   struct NodeKey {
     TValuefields;  /* fields for value */
-    lu_byte key_tt;  //key 类型
-    int next;  //next 指针
-    Value key_val;  //key
+    lu_byte key_tt;     //key 类型
+    int next;           //next 指针
+    Value key_val;      //key
   } u;
-  TValue i_val;  //value 快捷访问的方式
+  TValue i_val;         //value 快捷访问的方式
 } Node;
 
 

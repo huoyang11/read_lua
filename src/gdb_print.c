@@ -1,6 +1,11 @@
-/*
+﻿/*
     用于写gdb脚本,方便调试
 */
+
+#ifdef _WIN32
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
