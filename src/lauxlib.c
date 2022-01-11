@@ -808,13 +808,13 @@ LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
   return status;
 }
 
-
+//缓存字符串结构
 typedef struct LoadS {
   const char *s;
   size_t size;
 } LoadS;
 
-
+//loadbuf 的zio回调
 static const char *getS (lua_State *L, void *ud, size_t *size) {
   LoadS *ls = (LoadS *)ud;
   (void)L;  /* not used */

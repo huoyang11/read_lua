@@ -416,11 +416,11 @@ static int db_gethook (lua_State *L) {
   return 3;
 }
 
-
+//debug模式 输入cont结束
 static int db_debug (lua_State *L) {
   for (;;) {
     char buffer[250];
-    lua_writestringerror("%s", "lua_debug> ");
+    lua_writestringerror("%s", "lua_debug> ");                            //fprintf并且清空缓冲区
     if (fgets(buffer, sizeof(buffer), stdin) == NULL ||
         strcmp(buffer, "cont\n") == 0)
       return 0;
@@ -449,7 +449,7 @@ static int db_traceback (lua_State *L) {
 static int db_setcstacklimit (lua_State *L) {
   int limit = (int)luaL_checkinteger(L, 1);
   int res = lua_setcstacklimit(L, limit);
-  lua_pushinteger(L, res);
+  lua_pushinteger(L, res); 
   return 1;
 }
 

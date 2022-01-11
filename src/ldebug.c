@@ -835,17 +835,17 @@ int luaG_traceexec (lua_State *L, const Instruction *pc) {
   lu_byte mask = L->hookmask;
   const Proto *p = ci_func(ci)->p;
   int counthook;
-  if (!(mask & (LUA_MASKLINE | LUA_MASKCOUNT))) {  /* no hooks? */
+  if (!(mask & (LUA_MASKLINE | LUA_MASKCOUNT))) {               //永久或者计数
     ci->u.l.trap = 0;  /* don't need to stop again */
     return 0;  /* turn off 'trap' */
   }
-  pc++;  /* reference is always next instruction */
+  pc++;  /* reference is always next instruction */  
   ci->u.l.savedpc = pc;  /* save 'pc' */
-  counthook = (--L->hookcount == 0 && (mask & LUA_MASKCOUNT));
-  if (counthook)
+  counthook = (--L->hookcount == 0 && (mask & LUA_MASKCOUNT));  //计数器减一
+  if (counthook)                                                //如果计数器减到0
     resethookcount(L);  /* reset count */
-  else if (!(mask & LUA_MASKLINE))
-    return 1;  /* no line hook and count != 0; nothing to be done now */
+  else if (!(mask & LUA_MASKLINE))                              //如果计数器为0并且没有LUA_MASKLINE标准位,直接退出
+    return 1;
   if (ci->callstatus & CIST_HOOKYIELD) {  /* called hook last time? */
     ci->callstatus &= ~CIST_HOOKYIELD;  /* erase mark */
     return 1;  /* do not call hook again (VM yielded, so it did not move) */

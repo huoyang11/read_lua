@@ -136,16 +136,16 @@ l_noret luaD_throw (lua_State *L, int errcode) {
 
 
 int luaD_rawrunprotected (lua_State *L, Pfunc f, void *ud) {
-  l_uint32 oldnCcalls = L->nCcalls;
+  l_uint32 oldnCcalls = L->nCcalls;   //保存oldnCcalls
   struct lua_longjmp lj;
   lj.status = LUA_OK;
-  lj.previous = L->errorJmp;  /* chain new error handler */
-  L->errorJmp = &lj;
-  LUAI_TRY(L, &lj,
+  lj.previous = L->errorJmp;          //保存lua_longjmp
+  L->errorJmp = &lj;                  //使用当前的lua_longjmp
+  LUAI_TRY(L, &lj,                    //setjmp保存当前的上下文
     (*f)(L, ud);
   );
-  L->errorJmp = lj.previous;  /* restore old error handler */
-  L->nCcalls = oldnCcalls;
+  L->errorJmp = lj.previous;          //恢复lua_longjmp
+  L->nCcalls = oldnCcalls;            //恢复oldnCcalls
   return lj.status;
 }
 
@@ -885,19 +885,19 @@ int luaD_closeprotected (lua_State *L, ptrdiff_t level, int status) {
 int luaD_pcall (lua_State *L, Pfunc func, void *u,
                 ptrdiff_t old_top, ptrdiff_t ef) {
   int status;
-  CallInfo *old_ci = L->ci;
-  lu_byte old_allowhooks = L->allowhook;
-  ptrdiff_t old_errfunc = L->errfunc;
-  L->errfunc = ef;
-  status = luaD_rawrunprotected(L, func, u);
-  if (l_unlikely(status != LUA_OK)) {  /* an error occurred? */
-    L->ci = old_ci;
-    L->allowhook = old_allowhooks;
-    status = luaD_closeprotected(L, old_top, status);
-    luaD_seterrorobj(L, status, restorestack(L, old_top));
+  CallInfo *old_ci = L->ci;                                 //保存调用栈
+  lu_byte old_allowhooks = L->allowhook;                    //保存allowhook
+  ptrdiff_t old_errfunc = L->errfunc;                       //保存错误处理函数
+  L->errfunc = ef;                                          //设置错误处理函数
+  status = luaD_rawrunprotected(L, func, u);                //执行func,会捕获func执行的状态
+  if (l_unlikely(status != LUA_OK)) {                       //func函数执行出错
+    L->ci = old_ci;                                         //回退调用栈
+    L->allowhook = old_allowhooks;                          //恢复allowhook
+    status = luaD_closeprotected(L, old_top, status);       //
+    luaD_seterrorobj(L, status, restorestack(L, old_top));  //根据错误类型获取对应的错误信息
     luaD_shrinkstack(L);   /* restore stack size in case of overflow */
   }
-  L->errfunc = old_errfunc;
+  L->errfunc = old_errfunc;                                 //恢复错误处理函数
   return status;
 }
 
@@ -910,7 +910,7 @@ struct SParser {  /* data to 'f_parser' */
   ZIO *z;
   Mbuffer buff;  /* dynamic structure used by the scanner */
   Dyndata dyd;  /* dynamic structures used by the parser */
-  const char *mode;
+  const char *mode;   //解析模式 lua源码解析/luadump解析
   const char *name;
 };
 
@@ -946,12 +946,14 @@ int luaD_protectedparser (lua_State *L, ZIO *z, const char *name,
   struct SParser p;
   int status;
   incnny(L);  /* cannot yield during parsing */
+  //初始化SParser
   p.z = z; p.name = name; p.mode = mode;
   p.dyd.actvar.arr = NULL; p.dyd.actvar.size = 0;
   p.dyd.gt.arr = NULL; p.dyd.gt.size = 0;
   p.dyd.label.arr = NULL; p.dyd.label.size = 0;
   luaZ_initbuffer(L, &p.buff);
   status = luaD_pcall(L, f_parser, &p, savestack(L, L->top), L->errfunc);
+  //析构SParser
   luaZ_freebuffer(L, &p.buff);
   luaM_freearray(L, p.dyd.actvar.arr, p.dyd.actvar.size);
   luaM_freearray(L, p.dyd.gt.arr, p.dyd.gt.size);

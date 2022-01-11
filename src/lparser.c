@@ -176,13 +176,13 @@ static int registerlocalvar (LexState *ls, FuncState *fs, TString *varname) { //
   Proto *f = fs->f;
   int oldsize = f->sizelocvars;
   luaM_growvector(ls->L, f->locvars, fs->ndebugvars, f->sizelocvars,
-                  LocVar, SHRT_MAX, "local variables");
-  while (oldsize < f->sizelocvars)
+                  LocVar, SHRT_MAX, "local variables");                 //空间不足realloc
+  while (oldsize < f->sizelocvars)                                      //realloc后初始化
     f->locvars[oldsize++].varname = NULL;
-  f->locvars[fs->ndebugvars].varname = varname;
-  f->locvars[fs->ndebugvars].startpc = fs->pc;
+  f->locvars[fs->ndebugvars].varname = varname;                         //局部变量的名字
+  f->locvars[fs->ndebugvars].startpc = fs->pc;                          //局部变量开始的pc指针位置
   luaC_objbarrier(ls->L, f, varname);
-  return fs->ndebugvars++;
+  return fs->ndebugvars++;                                              //返回f->locvars数组的下标
 }
 
 
@@ -198,11 +198,11 @@ static int new_localvar (LexState *ls, TString *name) { //创建一个局部变�
   checklimit(fs, dyd->actvar.n + 1 - fs->firstlocal,
                  MAXVARS, "local variables");
   luaM_growvector(L, dyd->actvar.arr, dyd->actvar.n + 1,
-                  dyd->actvar.size, Vardesc, USHRT_MAX, "local variables");
-  var = &dyd->actvar.arr[dyd->actvar.n++];
-  var->vd.kind = VDKREG;  /* default */
-  var->vd.name = name;
-  return dyd->actvar.n - 1 - fs->firstlocal;
+                  dyd->actvar.size, Vardesc, USHRT_MAX, "local variables"); //扩容检测
+  var = &dyd->actvar.arr[dyd->actvar.n++];                                  //分配一个Vardesc结构
+  var->vd.kind = VDKREG;                                                    //局部变量的属性
+  var->vd.name = name;                                                      //局部变量的名字
+  return dyd->actvar.n - 1 - fs->firstlocal;                                //返回下标
 }
 
 #define new_localvarliteral(ls,v) \
@@ -230,7 +230,7 @@ static int reglevel (FuncState *fs, int nvar) {
   while (nvar-- > 0) { //-- 
     Vardesc *vd = getlocalvardesc(fs, nvar);  //获取的是上一个变量
     if (vd->vd.kind != RDKCTC)  /* is in a register? */
-      return vd->vd.ridx + 1;
+      return vd->vd.ridx + 1;                 //当前局部变量的位置
   }
   return 0;  /* no variables in registers */
 }
@@ -313,10 +313,10 @@ static void adjustlocalvars (LexState *ls, int nvars) {
   int reglevel = luaY_nvarstack(fs);
   int i;
   for (i = 0; i < nvars; i++) {
-    int vidx = fs->nactvar++; //局部变量计数
+    int vidx = fs->nactvar++;                               //局部变量计数
     Vardesc *var = getlocalvardesc(fs, vidx);
-    var->vd.ridx = reglevel++;
-    var->vd.pidx = registerlocalvar(ls, fs, var->vd.name);
+    var->vd.ridx = reglevel++;                              //局部变量在栈中的位置
+    var->vd.pidx = registerlocalvar(ls, fs, var->vd.name);  //添加一个f->locvars数组元素并且返回数组的下标
   }
 }
 
@@ -469,21 +469,21 @@ static void singlevar (LexState *ls, expdesc *var) {
 */
 static void adjust_assign (LexState *ls, int nvars, int nexps, expdesc *e) {
   FuncState *fs = ls->fs;
-  int needed = nvars - nexps;  /* extra values needed */
-  if (hasmultret(e->k)) {  //最后一个表达式有多个返回(函数返回多个值)
+  int needed = nvars - nexps;                 //局部变量数量-右值数量
+  if (hasmultret(e->k)) {                     //最后一个表达式有多个返回(函数返回多个值)
     int extra = needed + 1;  /* discount last expression itself */
     if (extra < 0)
       extra = 0;
     luaK_setreturns(fs, e, extra);  /* last exp. provides the difference */
   }
   else {
-    if (e->k != VVOID)  //最少一个表达式
+    if (e->k != VVOID)                        //最少一个表达式
       luaK_exp2nextreg(fs, e);  /* close last expression */
-    if (needed > 0)  /* missing values? */
-      luaK_nil(fs, fs->freereg, needed);  /* complete with nils */
+    if (needed > 0)                           //局部变量的数量大于右值数量,其余值变量初始化为nil
+      luaK_nil(fs, fs->freereg, needed);
   }
   if (needed > 0)
-    luaK_reserveregs(fs, needed);  /* registers for extra values */
+    luaK_reserveregs(fs, needed);             //给多余的局部变量分配栈
   else  /* adding 'needed' is actually a subtraction */
     fs->freereg += needed;  /* remove extra values */
 }
@@ -1251,7 +1251,7 @@ static BinOpr subexpr (LexState *ls, expdesc *v, int limit) {
   UnOpr uop;
   enterlevel(ls);
   uop = getunopr(ls->t.token);
-  if (uop != OPR_NOUNOPR) {  /* prefix (unary) operator? */
+  if (uop != OPR_NOUNOPR) {                                 //前缀运算符
     int line = ls->linenumber;
     luaX_next(ls);  /* skip operator */
     subexpr(ls, v, UNARY_PRIORITY);
@@ -1259,7 +1259,7 @@ static BinOpr subexpr (LexState *ls, expdesc *v, int limit) {
   }
   else simpleexp(ls, v);
   /* expand while operators have priorities higher than 'limit' */
-  op = getbinopr(ls->t.token);
+  op = getbinopr(ls->t.token);                              //获取运算符
   while (op != OPR_NOBINOPR && priority[op].left > limit) { //优先级必须大于limit 并且是 运算符
     expdesc v2;
     BinOpr nextop;
@@ -1267,8 +1267,8 @@ static BinOpr subexpr (LexState *ls, expdesc *v, int limit) {
     luaX_next(ls);  /* skip operator */
     luaK_infix(ls->fs, op, v);
     /* read sub-expression with higher priority */
-    nextop = subexpr(ls, &v2, priority[op].right); //递归获得右操作数
-    luaK_posfix(ls->fs, op, v, &v2, line); //如果是纯数字操作直接运算出结果,如果有变量等需要程序动态获得值的操作需要编码
+    nextop = subexpr(ls, &v2, priority[op].right);          //递归获得右操作数
+    luaK_posfix(ls->fs, op, v, &v2, line);                  //如果是纯数字操作直接运算出结果,如果有变量等需要程序动态获得值的操作需要编码
     op = nextop;
   }
   leavelevel(ls);
@@ -1720,27 +1720,27 @@ static void localstat (LexState *ls) {
   int toclose = -1;  /* index of to-be-closed variable (if any) */
   Vardesc *var;  /* last variable */
   int vidx, kind;  /* index and kind of last variable */
-  int nvars = 0;
-  int nexps;
-  expdesc e;
+  int nvars = 0;    //局部变量数量
+  int nexps;        //初始化右值的数量
+  expdesc e;        //缓存结构体,保存右值
   do {
     vidx = new_localvar(ls, str_checkname(ls)); //分配一个Vardesc,返回其数组下标
-    kind = getlocalattribute(ls);   // <const> 或者 <close>
-    getlocalvardesc(fs, vidx)->vd.kind = kind;  //根据new_localvar返回的下标找到对应的结构
-    if (kind == RDKTOCLOSE) {  /* to-be-closed? */
+    kind = getlocalattribute(ls);               //局部变量属性 <const> 或者 <close>
+    getlocalvardesc(fs, vidx)->vd.kind = kind;  //设置局部变量的属性
+    if (kind == RDKTOCLOSE) {                   //<close>
       if (toclose != -1)  /* one already present? */
         luaK_semerror(ls, "multiple to-be-closed variables in local list");
       toclose = fs->nactvar + nvars;
     }
-    nvars++;  //局部变量数量
-  } while (testnext(ls, ','));//是否还有后续的局部变量  (如 a,b = 10,20)
+    nvars++;                                    //局部变量数量
+  } while (testnext(ls, ','));                  //是否还有后续的局部变量  (如 local a,b = 10,20)
   if (testnext(ls, '='))
-    nexps = explist(ls, &e); // '=' 右边的处理  nexps为右值的数量   10,20
-  else {
+    nexps = explist(ls, &e);                    // '=' 右边的处理  nexps为右值的数量   10,20
+  else {                                        //如果不是 '=' 说明没有初始化变量
     e.k = VVOID;
     nexps = 0;
   }
-  var = getlocalvardesc(fs, vidx);  /* get last variable */
+  var = getlocalvardesc(fs, vidx);              //获取Vardesc
   if (nvars == nexps &&  /* no adjustments? */
       var->vd.kind == RDKCONST &&  /* last variable is const? */
       luaK_exp2const(fs, &e, &var->k)) {  /* compile-time constant? */
@@ -1760,7 +1760,7 @@ static int funcname (LexState *ls, expdesc *v) {
   /* funcname -> NAME {fieldsel} [':' NAME] */
   int ismethod = 0;
   singlevar(ls, v);
-  while (ls->t.token == '.')
+  while (ls->t.token == '.'&& ls === 1)
     fieldsel(ls, v);
   if (ls->t.token == ':') {
     ismethod = 1;

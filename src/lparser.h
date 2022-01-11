@@ -97,7 +97,7 @@ typedef union Vardesc {
   struct {
     TValuefields;  /* constant value (if it is a compile-time constant) */
     lu_byte kind;
-    lu_byte ridx;   //变量在栈的位置
+    lu_byte ridx;   //变量在栈的位置(相对于当前的函数)
     short pidx;     //Proto->locvars数组的下标
     TString *name;  //变量名
   } vd;
@@ -128,11 +128,11 @@ typedef struct Labellist {
 typedef struct Dyndata {
   struct {  /* list of all active local variables */
     Vardesc *arr;
-    int n;    //当前使用
-    int size; //大小
+    int n;            //当前使用
+    int size;         //大小
   } actvar;
-  Labellist gt;      //保存解析信息数组。用于goto/break调整jmp指令位置
-  Labellist label;   //保存解析信息数组。用于做goto/break的目标
+  Labellist gt;       //保存解析信息数组。用于goto/break调整jmp指令位置
+  Labellist label;    //保存解析信息数组。用于做goto/break的目标
 } Dyndata;
 
 
@@ -142,20 +142,20 @@ struct BlockCnt;  /* defined in lparser.c */
 
 /* state needed to generate code for a given function */
 typedef struct FuncState {
-  Proto *f;  /* current function header */
-  struct FuncState *prev;  /* enclosing function */
-  struct LexState *ls;  /* lexical state */
+  Proto *f;                 //解析的指令集合
+  struct FuncState *prev;   //上一个解析函数结构
+  struct LexState *ls;      //解析上下文
   struct BlockCnt *bl;  /* chain of current blocks */
-  int pc;             //f->code 下一个可用的位置
+  int pc;                   //f->code 下一个可用的位置
   int lasttarget;   /* 'label' of last 'jump label' */
   int previousline;  /* last line that was saved in 'lineinfo' */
-  int nk;             //'f->k' 中使用的元素数量
-  int np;             //'f->p' 中使用的元素数量
+  int nk;                   //'f->k' 中使用的元素数量
+  int np;                   //'f->p' 中使用的元素数量
   int nabslineinfo;  /* number of elements in 'abslineinfo' */
   int firstlocal;  /* index of first local var (in Dyndata array) */
   int firstlabel;  /* index of first label (in 'dyd->label->arr') */
-  short ndebugvars;   //'f->locvars' 中使用的元素数量
-  lu_byte nactvar;  //当前的局部变量数量
+  short ndebugvars;         //'f->locvars' 中使用的元素数量
+  lu_byte nactvar;          //当前的局部变量数量
   lu_byte nups;  /* number of upvalues */
   lu_byte freereg;  /* first free register */
   lu_byte iwthabs;  /* instructions issued since last absolute line info */
