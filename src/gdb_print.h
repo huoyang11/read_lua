@@ -3,6 +3,6 @@
 
 #include "lobject.h"
 
-const char *print_value(lua_State *L,const TValue *o);
+const char *print_value(const TValue *o);
 
 #endif
