@@ -143,9 +143,9 @@ const char *print_table(lua_State *L,Table *t)
   StackValue tem[2] = {0};
   setnilvalue(s2v(tem));
   while(luaH_next(L,t,tem)) {
-    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",print_value(L,s2v(tem)));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",print_value(s2v(tem)));
     len += snprintf(buf + len,BUFFSIZE - len - 1,"\t");
-    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",print_value(L,s2v(tem + 1)));
+    len += snprintf(buf + len,BUFFSIZE - len - 1,"%s",print_value(s2v(tem + 1)));
     len += snprintf(buf + len,BUFFSIZE - len - 1,"\n");
     if (len >= BUFFSIZE) return buf;
   }
