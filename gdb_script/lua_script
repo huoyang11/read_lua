@@ -1,6 +1,6 @@
 define plua_Tval
-if $argc != 2
-    p "参数数目错误,{plua_Tval lua_State *, TValue *}"
+if $argc != 1
+    p "参数数目错误,{plua_Tval TValue *}"
 end
 p print_value($arg0,$arg1)
 end
