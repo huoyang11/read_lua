@@ -1,5 +1,6 @@
-package.path = "/home/yh/public/read_lua/test/lua/?.lua;"
-local req = require "req"
+local a = 20
 
-print(req.a)
-print(req.b)
+if a == 20 then
+	print(a)
+end
+
