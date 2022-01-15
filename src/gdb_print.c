@@ -109,7 +109,7 @@ static int dbg_print (lua_State *L) {
 }
 
 //通用类型输出
-const char *print_value(lua_State *L,const TValue *o)
+const char *print_value(const TValue *o)
 {
   if (!o)
   {

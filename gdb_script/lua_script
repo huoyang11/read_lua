@@ -2,7 +2,7 @@ define plua_Tval
 if $argc != 1
     p "参数数目错误,{plua_Tval TValue *}"
 end
-p print_value($arg0,$arg1)
+p print_value($arg0)
 end
 
 define plua_Ttable
