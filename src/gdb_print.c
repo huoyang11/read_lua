@@ -31,6 +31,7 @@
 #include "lundump.h"
 
 #define BUFFSIZE 4096
+const char* debug_str = NULL;
 
 //去gc操作
 LUA_API const char *dbg_pushfstring (lua_State *L, const char *fmt, ...) {
@@ -127,7 +128,7 @@ const char *print_value(const TValue *o)
   lua_pcall(L,1,1,0);
 
   const char *s = lua_tostring(L,-1);
-
+  debug_str = s;
   lua_pop(L,1);
 
   return s;
@@ -150,6 +151,7 @@ const char *print_table(lua_State *L,Table *t)
     if (len >= BUFFSIZE) return buf;
   }
 
+  debug_str = buf;
   return buf;
 }
 
@@ -209,6 +211,7 @@ const char *PrintString(const TString* ts)
   }
  }
  len += snprintf(buf + len,BUFFSIZE - len - 1,"\"");
+ debug_str = buf;
 
  return buf;
 }
@@ -250,6 +253,7 @@ const char *PrintConstant(const Proto* f, int i)
     break;
  }
 
+ debug_str = buf;
  return buf;
 }
 
@@ -587,6 +591,7 @@ const char *PrintCode(lua_State* L,const Proto* f,int n)
   len += snprintf(buf + len,BUFFSIZE - len - 1,"\n");
  }
 
+ debug_str = buf;
  return buf;
 }
 
@@ -606,8 +611,13 @@ const char *print_token(int token)
 {
   if (token >= FIRST_RESERVED) return luaX_tokens[token - FIRST_RESERVED];
 
-  const char *p = (char *)&token;
-  return p;
+  static char buf[4];
+  memset(buf,0,sizeof(buf));
+
+  char *p = (char *)&token;
+  buf[0] = *p;
+
+  return buf;
 }
 
 typedef struct LoadF {
@@ -746,6 +756,7 @@ const char *print_tokens(LexState *ls)
   loadF_uninit(&lf);
   lua_close(L);
   
+  debug_str = buf;
   return buf;
 }
 
@@ -765,6 +776,7 @@ const char *print_listcolor(GCObject *item)
     len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","color:black2");
   }
 
+  debug_str = buf;
   return buf;
 }
 
@@ -795,6 +807,7 @@ const char *print_listtype(GCObject *item)
     len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","lngstr");
   }
 
+  debug_str = buf;
   return buf;
 }
 
@@ -829,6 +842,7 @@ const char *print_lists(GCObject *list)
     len += snprintf(buf + len,BUFFSIZE - len - 1,"%s","}\n");
   }
 
+  debug_str = buf;
   return buf;
 }
 
@@ -848,5 +862,6 @@ const char *print_nextlists(GCObject *list)
     if (len >= BUFFSIZE) break;
   }
 
+  debug_str = buf;
   return buf;
 }

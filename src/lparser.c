@@ -784,7 +784,6 @@ static int block_follow (LexState *ls, int withuntil) {
   }
 }
 
-
 static void statlist (LexState *ls) {
   /* statlist -> { stat [';'] } */
   while (!block_follow(ls, 1)) {

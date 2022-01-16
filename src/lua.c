@@ -640,10 +640,15 @@ static int pmain (lua_State *L) {
   return 1;
 }
 
+static void user_fun()
+{
+    print_value(NULL);
+    printf("");
+}
 
 int main (int argc, char **argv) {
   int status, result;
-  print_value(NULL);
+  user_fun();
   lua_State *L = luaL_newstate();  /* create state */
   if (L == NULL) {
     l_message(argv[0], "cannot create state: not enough memory");
